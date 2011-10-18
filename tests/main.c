@@ -1,0 +1,77 @@
+/* DML - Dependence Modeling Library
+ * Copyright (C) 2011 Yasser González-Fernández <ygonzalezfernandez@gmail.com>
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option)
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#include "config.h"
+#include "tests/common.h"
+
+int
+main(int argc, char **argv)
+{
+    g_test_init(&argc, &argv, NULL);
+
+    g_test_add_func("/measure/tau/small", test_measure_tau_small);
+    g_test_add_func("/measure/tau/large", test_measure_tau_large);
+
+    g_test_add_func("/copula/indep/alloc", test_indep_alloc);
+    g_test_add_func("/copula/indep/fit", test_indep_fit);
+    g_test_add_func("/copula/indep/pdf", test_indep_pdf);
+    g_test_add_func("/copula/indep/cdf", test_indep_cdf);
+    g_test_add_func("/copula/indep/h", test_indep_h);
+    g_test_add_func("/copula/indep/hinv", test_indep_hinv);
+    g_test_add_func("/copula/normal/alloc", test_normal_alloc);
+    g_test_add_func("/copula/normal/fit", test_normal_fit);
+    g_test_add_func("/copula/normal/pdf", test_normal_pdf);
+    g_test_add_func("/copula/normal/cdf", test_normal_cdf);
+    g_test_add_func("/copula/normal/h", test_normal_h);
+    g_test_add_func("/copula/normal/hinv", test_normal_hinv);
+    g_test_add_func("/copula/clayton/alloc", test_clayton_alloc);
+    g_test_add_func("/copula/clayton/fit", test_clayton_fit);
+    g_test_add_func("/copula/clayton/pdf", test_clayton_pdf);
+    g_test_add_func("/copula/clayton/cdf", test_clayton_cdf);
+    g_test_add_func("/copula/clayton/h", test_clayton_h);
+    g_test_add_func("/copula/clayton/hinv", test_clayton_hinv);
+    g_test_add_func("/copula/rclayton90/alloc", test_rclayton90_alloc);
+    g_test_add_func("/copula/rclayton90/fit", test_rclayton90_fit);
+    g_test_add_func("/copula/rclayton90/pdf", test_rclayton90_pdf);
+    g_test_add_func("/copula/rclayton90/cdf", test_rclayton90_cdf);
+    g_test_add_func("/copula/rclayton90/h", test_rclayton90_h);
+    g_test_add_func("/copula/rclayton90/hinv", test_rclayton90_hinv);
+    g_test_add_func("/copula/rclayton180/alloc", test_rclayton180_alloc);
+    g_test_add_func("/copula/rclayton180/fit", test_rclayton180_fit);
+    g_test_add_func("/copula/rclayton180/pdf", test_rclayton180_pdf);
+    g_test_add_func("/copula/rclayton180/cdf", test_rclayton180_cdf);
+    g_test_add_func("/copula/rclayton180/h", test_rclayton180_h);
+    g_test_add_func("/copula/rclayton180/hinv", test_rclayton180_hinv);
+    g_test_add_func("/copula/rclayton270/alloc", test_rclayton270_alloc);
+    g_test_add_func("/copula/rclayton270/fit", test_rclayton270_fit);
+    g_test_add_func("/copula/rclayton270/pdf", test_rclayton270_pdf);
+    g_test_add_func("/copula/rclayton270/cdf", test_rclayton270_cdf);
+    g_test_add_func("/copula/rclayton270/h", test_rclayton270_h);
+    g_test_add_func("/copula/rclayton270/hinv", test_rclayton270_hinv);
+    g_test_add_func("/copula/selection/indeptest_none", test_copula_selection_indeptest_none);
+    g_test_add_func("/copula/selection/indeptest_tau", test_copula_selection_indeptest_tau);
+    g_test_add_func("/copula/selection/aic", test_copula_selection_aic);
+
+    g_test_add_func("/vine/cvine/alloc", test_cvine_alloc);
+    g_test_add_func("/vine/dvine/alloc", test_dvine_alloc);
+    g_test_add_func("/vine/rvine/alloc", test_rvine_alloc);
+    g_test_add_func("/vine/rvine/fit/3d_normal", test_rvine_fit_3d_normal);
+    g_test_add_func("/vine/rvine/fit/7d_normal", test_rvine_fit_7d_normal);
+    g_test_add_func("/vine/rvine/fit/9d_normal_truncated", test_rvine_fit_9d_normal_truncated);
+
+    return g_test_run();
+}
