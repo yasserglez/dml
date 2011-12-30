@@ -65,14 +65,16 @@ rvine_tree_cleanup(igraph_t *tree)
     for (a = 0; a < igraph_vcount(tree); a++) {
         xa = VAP(tree, "data", a);
         gsl_vector_free(xa);
-    }DELVAS(tree);
+    }
+    DELVAS(tree);
 
     for (e = 0; e < igraph_ecount(tree); e++) {
         Ue = EAP(tree, "Ue", e);
         gsl_vector_short_free(Ue);
         tau = EAP(tree, "tau", e);
         if (tau != NULL) dml_measure_tau_free(tau);
-    }DELEA(tree, "Ue");
+    }
+    DELEA(tree, "Ue");
     DELEA(tree, "weight");
     DELEA(tree, "tau");
 }
@@ -172,9 +174,7 @@ fit_rvine_trees(igraph_t **trees,
                         Ub = EAP(trees[k - 1], "Ue", b);
                         Ue = gsl_vector_short_calloc(n);
                         for (size_t i = 0; i < n; i++) {
-                            gsl_vector_short_set(
-                                    Ue,
-                                    i,
+                            gsl_vector_short_set(Ue, i,
                                     gsl_vector_short_get(Ua, i)
                                             | gsl_vector_short_get(Ub, i));
                             if (gsl_vector_short_get(Ua, i)
@@ -185,7 +185,8 @@ fit_rvine_trees(igraph_t **trees,
                                     && !gsl_vector_short_get(Ua, i)) {
                                 SETEAN(graph, "Ceb", e, i + 1);
                             }
-                        }SETEAP(graph, "Ue", e, Ue);
+                        }
+                        SETEAP(graph, "Ue", e, Ue);
                         e++;
                     }
                 }
@@ -313,8 +314,8 @@ rvine_trees_to_vine(dml_vine_t *vine, igraph_t **trees)
                     if (x == Cea) {
                         x_hat_hat = Ceb;
                         if (!gsl_vector_short_get(B, x_hat_hat - 1)) {
-                            /* That pseudocode of the algorithm does not
-                             * included this check and invalid matrices
+                            /* The pseudocode of the algorithm does not
+                             * included this check. Invalid matrices
                              * were generated when xhathat is set to an
                              * index already assigned to a diagonal entry.
                              */
@@ -440,7 +441,7 @@ vine_ran_rvine(const dml_vine_t *vine, const gsl_rng *rng, gsl_matrix *data)
     gsl_matrix_set_col(data, vine->order[0], vdirect[n - 1][n - 1]);
 
     // for loop in line 7.
-    for (size_t k = n - 2; /* See the end of the loop. */; k--) {
+    for (size_t k = n - 2; /* See break call. */; k--) {
         // for loop in line 8.
         for (size_t i = k + 1; i < n; i++) {
             // Line 14.
