@@ -247,9 +247,9 @@ fit_rvine_trees(igraph_t **trees,
     g_free(graph);
 }
 
-/* Compute an R-vine matrix from the trees. Based on Algorithm 3.2 from
- * Dissman, J. F. (2010). Statistical inference for regular vines and
- * application. Diploma thesis. Technische Universitaet Muenchen.
+/* Compute an R-vine matrix from the trees. Based on Algorithm 3.2 of
+ * Dissman, J. F. (2010). Statistical Inference for Regular Vines and
+ * Application. Diploma thesis. University of Technology, Munich.
  */
 static void
 rvine_trees_to_vine(dml_vine_t *vine, igraph_t **trees)
@@ -359,9 +359,9 @@ rvine_trees_to_vine(dml_vine_t *vine, igraph_t **trees)
     gsl_vector_short_free(B);
 }
 
-/* Sequential R-vine estimation method. Based on Algorithm 4.1 from
- * Dissman, J. F. (2010). Statistical inference for regular vines and
- * application. Diploma thesis. Technische Universitaet Muenchen.
+/* Sequential R-vine estimation method. Based on Algorithm 4.1 of
+ * Dissman, J. F. (2010). Statistical Inference for Regular Vines and
+ * Application. Diploma thesis. University of Technology, Munich.
  */
 static void
 vine_fit_rvine(dml_vine_t *vine,
@@ -393,9 +393,9 @@ vine_fit_rvine(dml_vine_t *vine,
 }
 
 /* Simulation of observations of an R-vine specification. Based on
- * Algorithm 5.2 from Dissman, J. F. (2010). Statistical inference
- * for regular vines and application. Diploma thesis. Technische
- * Universitaet Muenchen.
+ * Algorithm 5.2 of Dissman, J. F. (2010). Statistical Inference
+ * for Regular Vines and Application. Diploma thesis. University
+ * of Technology, Munich.
  */
 static void
 vine_ran_rvine(const dml_vine_t *vine, const gsl_rng *rng, gsl_matrix *data)
