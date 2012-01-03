@@ -96,7 +96,7 @@ test_cvine_fit_2d()
 void
 test_cvine_ran_fit_20d_normal_trunc()
 {
-    size_t n = 20, m = 2500;
+    size_t n = 20, m = 2000;
     gsl_rng *rng;
     dml_copula_type_t types[] = { DML_COPULA_NORMAL };
     size_t types_size = 1;
@@ -181,8 +181,6 @@ test_cvine_ran_fit_5d_normal_indep()
     vine->copulas[2][1] = dml_copula_alloc_indep();
     vine->copulas[3][0] = dml_copula_alloc_indep();
 
-    // Simulate the original vine and estimate a new vine from the sample.
-    // Then, sample the fitted vine.
     vine_data = gsl_matrix_alloc(m, n);
     dml_vine_ran(vine, rng, vine_data);
     fitted = dml_vine_alloc(DML_VINE_CVINE, n);
@@ -235,6 +233,73 @@ test_rvine_alloc()
 
     vine = dml_vine_alloc(DML_VINE_RVINE, 2);
     g_assert(dml_vine_type(vine) == DML_VINE_RVINE);
+    dml_vine_free(vine);
+}
+
+void
+test_rvine_ran_2d()
+{
+    gsl_rng *rng;
+    dml_vine_t *vine;
+    gsl_matrix *data;
+    size_t m = 100;
+    gsl_vector_view x, y;
+    double corr = 0.9, vine_corr;
+
+    rng = gsl_rng_alloc(gsl_rng_taus);
+    gsl_rng_set(rng, g_test_rand_int());
+
+    vine = dml_vine_alloc(DML_VINE_RVINE, 2);
+    vine->trees = 1;
+    vine->order[0] = 0;
+    vine->order[1] = 1;
+    vine->matrix[0][0] = 2;
+    vine->matrix[1][0] = 1;
+    vine->matrix[1][1] = 1;
+    vine->copulas[1][0] = dml_copula_alloc_normal(corr);
+    data = gsl_matrix_alloc(m, 2);
+    dml_vine_ran(vine, rng, data);
+    x = gsl_matrix_column(data, 0);
+    y = gsl_matrix_column(data, 1);
+    vine_corr = gsl_stats_correlation(x.vector.data, x.vector.stride,
+                                      y.vector.data, y.vector.stride, m);
+    g_assert(fabs(corr - vine_corr) < 0.1);
+
+    dml_vine_free(vine);
+    gsl_matrix_free(data);
+}
+
+void
+test_rvine_fit_2d()
+{
+    gsl_rng *rng;
+    dml_copula_t *copula;
+    gsl_matrix *data;
+    size_t m = 100;
+    gsl_vector_view x, y;
+    dml_vine_t *vine;
+    dml_copula_type_t types[] = { DML_COPULA_NORMAL };
+    size_t types_size = 1;
+    double corr = 0.9, vine_corr;
+
+    rng = gsl_rng_alloc(gsl_rng_taus);
+    gsl_rng_set(rng, g_test_rand_int());
+
+    data = gsl_matrix_alloc(m, 2);
+    x = gsl_matrix_column(data, 0);
+    y = gsl_matrix_column(data, 1);
+
+    copula = dml_copula_alloc_normal(corr);
+    dml_copula_ran(copula, rng, &x.vector, &y.vector);
+    vine = dml_vine_alloc(DML_VINE_RVINE, 2);
+    dml_vine_fit(vine, data, DML_VINE_WEIGHT_TAU, DML_VINE_TRUNCATION_NONE,
+                 DML_COPULA_INDEPTEST_NONE, 1.0, &types[0], types_size,
+                 DML_COPULA_SELECTION_AIC);
+    vine_corr = ((double *) vine->copulas[1][0]->data)[0];
+    g_assert(fabs(corr - vine_corr) < 0.1);
+
+    gsl_matrix_free(data);
+    dml_copula_free(copula);
     dml_vine_free(vine);
 }
 

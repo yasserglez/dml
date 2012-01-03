@@ -91,6 +91,8 @@ void test_cvine_ran_fit_20d_normal_trunc();
 void test_dvine_alloc();
 
 void test_rvine_alloc();
+void test_rvine_ran_2d();
+void test_rvine_fit_2d();
 void test_rvine_ran_fit_3d_normal();
 void test_rvine_ran_fit_7d_normal();
 void test_rvine_ran_fit_9d_normal_trunc();
