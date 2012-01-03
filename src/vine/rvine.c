@@ -208,7 +208,7 @@ fit_rvine_trees(igraph_t **trees,
             tau = EAP(trees[k], "tau", e);
 
             // Assign bivariate copulas to the edges.
-            copula = dml_copula_selection(xa, xb, tau, indeptest,
+            copula = dml_copula_select(xa, xb, tau, indeptest,
                                           indeptest_level, types, types_size,
                                           selection);
             SETEAP(trees[k], "copula", e, copula);

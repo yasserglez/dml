@@ -62,9 +62,9 @@ main(int argc, char **argv)
     g_test_add_func("/copula/rclayton270/cdf", test_rclayton270_cdf);
     g_test_add_func("/copula/rclayton270/h", test_rclayton270_h);
     g_test_add_func("/copula/rclayton270/hinv", test_rclayton270_hinv);
-    g_test_add_func("/copula/selection/indeptest_none", test_copula_selection_indeptest_none);
-    g_test_add_func("/copula/selection/indeptest_tau", test_copula_selection_indeptest_tau);
-    g_test_add_func("/copula/selection/aic", test_copula_selection_aic);
+    g_test_add_func("/copula/select/indeptest_none", test_copula_select_indeptest_none);
+    g_test_add_func("/copula/select/indeptest_tau", test_copula_select_indeptest_tau);
+    g_test_add_func("/copula/select/aic", test_copula_select_aic);
 
     g_test_add_func("/vine/cvine/alloc", test_cvine_alloc);
     g_test_add_func("/vine/cvine/ran_2d", test_cvine_ran_2d);

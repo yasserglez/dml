@@ -24,7 +24,7 @@
 #include <gsl/gsl_vector.h>
 
 dml_copula_t *
-dml_copula_selection(const gsl_vector *u,
+dml_copula_select(const gsl_vector *u,
                      const gsl_vector *v,
                      dml_measure_tau_t *tau,
                      const dml_copula_indeptest_t indeptest,

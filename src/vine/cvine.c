@@ -170,7 +170,7 @@ vine_fit_cvine(dml_vine_t *vine,
             xa = VAP(trees[k], "data", a);
             xb = VAP(trees[k], "data", b);
 
-            copula = dml_copula_selection(xa, xb, tau[(size_t) a][(size_t) b],
+            copula = dml_copula_select(xa, xb, tau[(size_t) a][(size_t) b],
                                           indeptest, indeptest_level, types,
                                           types_size, selection);
             SETEAP(trees[k], "copula", e, copula);

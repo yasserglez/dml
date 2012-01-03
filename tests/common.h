@@ -77,9 +77,9 @@ void test_rclayton270_cdf();
 void test_rclayton270_h();
 void test_rclayton270_hinv();
 
-void test_copula_selection_indeptest_none();
-void test_copula_selection_indeptest_tau();
-void test_copula_selection_aic();
+void test_copula_select_indeptest_none();
+void test_copula_select_indeptest_tau();
+void test_copula_select_aic();
 
 
 void test_cvine_alloc();
