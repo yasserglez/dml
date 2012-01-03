@@ -67,11 +67,15 @@ main(int argc, char **argv)
     g_test_add_func("/copula/selection/aic", test_copula_selection_aic);
 
     g_test_add_func("/vine/cvine/alloc", test_cvine_alloc);
+    g_test_add_func("/vine/cvine/ran_2d", test_cvine_ran_2d);
+    g_test_add_func("/vine/cvine/fit_2d", test_cvine_fit_2d);
+    g_test_add_func("/vine/cvine/ran_fit_5d_normal_indep", test_cvine_ran_fit_5d_normal_indep);
+    g_test_add_func("/vine/cvine/ran_fit_20d_normal_trunc", test_cvine_ran_fit_20d_normal_trunc);
     g_test_add_func("/vine/dvine/alloc", test_dvine_alloc);
     g_test_add_func("/vine/rvine/alloc", test_rvine_alloc);
-    g_test_add_func("/vine/rvine/fit/3d_normal", test_rvine_fit_3d_normal);
-    g_test_add_func("/vine/rvine/fit/7d_normal", test_rvine_fit_7d_normal);
-    g_test_add_func("/vine/rvine/fit/9d_normal_truncated", test_rvine_fit_9d_normal_truncated);
+    g_test_add_func("/vine/rvine/ran_fit_3d_normal", test_rvine_ran_fit_3d_normal);
+    g_test_add_func("/vine/rvine/ran_fit_7d_normal", test_rvine_ran_fit_7d_normal);
+    g_test_add_func("/vine/rvine/ran_fit_9d_normal_trunc", test_rvine_ran_fit_9d_normal_trunc);
 
     return g_test_run();
 }

@@ -83,12 +83,16 @@ void test_copula_selection_aic();
 
 
 void test_cvine_alloc();
+void test_cvine_ran_2d();
+void test_cvine_fit_2d();
+void test_cvine_ran_fit_5d_normal_indep();
+void test_cvine_ran_fit_20d_normal_trunc();
 
 void test_dvine_alloc();
 
 void test_rvine_alloc();
-void test_rvine_fit_3d_normal();
-void test_rvine_fit_7d_normal();
-void test_rvine_fit_9d_normal_truncated();
+void test_rvine_ran_fit_3d_normal();
+void test_rvine_ran_fit_7d_normal();
+void test_rvine_ran_fit_9d_normal_trunc();
 
 #endif /* TEST_H_ */

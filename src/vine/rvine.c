@@ -32,25 +32,26 @@
 #define SETEAP(graph, n, eid, value) (igraph_cattribute_EAN_set((graph),(n),(eid),((double) (long) (value))))
 
 static void
-rvine_set_edge_weight(igraph_t *graph,
-                      dml_vine_weight_t weight,
-                      igraph_integer_t e,
-                      const gsl_vector *x,
-                      const gsl_vector *y)
+rvine_set_weight(igraph_t *graph,
+                 dml_vine_weight_t weight,
+                 igraph_integer_t e,
+                 const gsl_vector *x,
+                 const gsl_vector *y)
 {
-    double w = 0;
+    double value;
     dml_measure_tau_t *tau = NULL;
 
     switch (weight) {
     case DML_VINE_WEIGHT_TAU:
         tau = dml_measure_tau_alloc(x, y);
-        w = 1 - fabs(dml_measure_tau_coef(tau));
+        value = 1 - fabs(dml_measure_tau_coef(tau));
         break;
     default:
+        value = 0;
         break;
     }
 
-    SETEAN(graph, "weight", e, w);
+    SETEAN(graph, "weight", e, value);
     SETEAP(graph, "tau", e, tau);
 }
 
@@ -92,7 +93,7 @@ fit_rvine_trees(igraph_t **trees,
 {
     size_t m, n;
     igraph_t *graph;
-    igraph_vector_t *graph_weights;
+    igraph_vector_t *graph_weight;
     dml_copula_t *copula;
     gsl_vector *x;
     igraph_integer_t e; // Edge id.
@@ -101,14 +102,14 @@ fit_rvine_trees(igraph_t **trees,
     gsl_vector_short *Ue, *Ua, *Ub;
     size_t k;
     dml_measure_tau_t *tau;
-    double aic_last_tree, aic_copula;
+    double tree_aic, copula_aic;
 
     igraph_i_set_attribute_table(&igraph_cattribute_table);
 
     m = data->size1;
     n = data->size2;
     graph = g_malloc(sizeof(igraph_t));
-    graph_weights = g_malloc(sizeof(igraph_vector_t));
+    graph_weight = g_malloc(sizeof(igraph_vector_t));
 
     for (k = 0; k < n - 1; k++) { // Tree index.
         if (k == 0) {
@@ -127,7 +128,7 @@ fit_rvine_trees(igraph_t **trees,
                 // Calculate the weight of the edge.
                 xa = VAP(graph, "data", a);
                 xb = VAP(graph, "data", b);
-                rvine_set_edge_weight(graph, weight, e, xa, xb);
+                rvine_set_weight(graph, weight, e, xa, xb);
 
                 // Variables "connected" by this edge.
                 Ue = gsl_vector_short_calloc(n);
@@ -155,7 +156,6 @@ fit_rvine_trees(igraph_t **trees,
             }
 
             // Adding all the "possible" edges.
-            e = 0;
             for (a = 0; a < igraph_vcount(graph) - 1; a++) {
                 for (b = a + 1; b < igraph_vcount(graph); b++) {
                     // Checking the proximity condition.
@@ -163,11 +163,12 @@ fit_rvine_trees(igraph_t **trees,
                     igraph_edge(trees[k - 1], b, &ba, &bb);
                     if (aa == ba || aa == bb || ab == ba || ab == bb) {
                         igraph_add_edge(graph, a, b);
+                        igraph_get_eid(graph, &e, a, b, 0);
 
                         // Calculate the weight of the edge.
                         xa = VAP(graph, "data", a);
                         xb = VAP(graph, "data", b);
-                        rvine_set_edge_weight(graph, weight, e, xa, xb);
+                        rvine_set_weight(graph, weight, e, xa, xb);
 
                         // Variables "connected" by this edge and conditioned set.
                         Ua = EAP(trees[k - 1], "Ue", a);
@@ -187,7 +188,6 @@ fit_rvine_trees(igraph_t **trees,
                             }
                         }
                         SETEAP(graph, "Ue", e, Ue);
-                        e++;
                     }
                 }
             }
@@ -195,12 +195,12 @@ fit_rvine_trees(igraph_t **trees,
 
         // Compute the minimum weight spanning tree.
         trees[k] = g_malloc(sizeof(igraph_t));
-        igraph_vector_init(graph_weights, igraph_ecount(graph));
-        EANV(graph, "weight", graph_weights);
-        igraph_minimum_spanning_tree_prim(graph, trees[k], graph_weights);
-        igraph_vector_destroy(graph_weights);
+        igraph_vector_init(graph_weight, igraph_ecount(graph));
+        EANV(graph, "weight", graph_weight);
+        igraph_minimum_spanning_tree_prim(graph, trees[k], graph_weight);
+        igraph_vector_destroy(graph_weight);
 
-        aic_last_tree = 0;
+        tree_aic = 0;
         for (e = 0; e < igraph_ecount(trees[k]); e++) {
             igraph_edge(trees[k], e, &a, &b);
             xa = VAP(trees[k], "data", a);
@@ -213,10 +213,10 @@ fit_rvine_trees(igraph_t **trees,
                                           selection);
             SETEAP(trees[k], "copula", e, copula);
 
-            // Get information for vine truncation.
+            // Get information for the truncation of the vine.
             if (truncation == DML_VINE_TRUNCATION_AIC) {
-                dml_copula_aic(copula, xa, xb, &aic_copula);
-                aic_last_tree += aic_copula;
+                dml_copula_aic(copula, xa, xb, &copula_aic);
+                tree_aic += copula_aic;
             }
         }
 
@@ -224,7 +224,7 @@ fit_rvine_trees(igraph_t **trees,
         igraph_destroy(graph);
 
         // Check if the vine should be truncated.
-        if (truncation == DML_VINE_TRUNCATION_AIC && aic_last_tree >= 0) {
+        if (truncation == DML_VINE_TRUNCATION_AIC && tree_aic >= 0) {
             // Free the memory used for the last tree.
             rvine_tree_cleanup(trees[k]);
             for (e = 0; e < igraph_ecount(trees[k]); e++) {
@@ -243,7 +243,7 @@ fit_rvine_trees(igraph_t **trees,
         rvine_tree_cleanup(trees[k - 1]);
     }
 
-    g_free(graph_weights);
+    g_free(graph_weight);
     g_free(graph);
 }
 
@@ -407,11 +407,11 @@ vine_ran_rvine(const dml_vine_t *vine, const gsl_rng *rng, gsl_matrix *data)
 
     n = vine->dimension;
     m = data->size1;
-    vdirect = g_malloc_n(n, sizeof(gsl_matrix **));
-    vindirect = g_malloc_n(n, sizeof(gsl_matrix **));
+    vdirect = g_malloc_n(n, sizeof(gsl_vector **));
+    vindirect = g_malloc_n(n, sizeof(gsl_vector **));
     for (size_t i = 0; i < n; i++) {
-        vdirect[i] = g_malloc0_n(n, sizeof(gsl_matrix *));
-        vindirect[i] = g_malloc0_n(n, sizeof(gsl_matrix *));
+        vdirect[i] = g_malloc0_n(n, sizeof(gsl_vector *));
+        vindirect[i] = g_malloc0_n(n, sizeof(gsl_vector *));
     }
     M = g_malloc_n(n, sizeof(size_t *));
     for (size_t i = 0; i < n; i++) {
@@ -540,10 +540,12 @@ dml_vine_alloc_rvine(const size_t dimension)
     vine->dimension = dimension;
     vine->trees = 0;
     vine->order = g_malloc_n(dimension, sizeof(size_t));
+    // R-vine matrix.
     vine->matrix = g_malloc_n(dimension, sizeof(size_t *));
     for (size_t i = 0; i < dimension; i++) {
         vine->matrix[i] = g_malloc0_n(i + 1, sizeof(size_t));
     }
+    // Lower triangular matrix with the copulas.
     vine->copulas = g_malloc_n(dimension, sizeof(dml_copula_t **));
     vine->copulas[0] = NULL;
     for (size_t i = 1; i < dimension; i++) {
