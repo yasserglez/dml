@@ -83,7 +83,7 @@ vine_fit_cvine(dml_vine_t *vine,
     igraph_integer_t root_vertex; // Vertex id of the root of the tree.
     size_t root_index; // Variable index corresponding to the root of the tree.
     gsl_vector *xa, *xb; // Samples of 'a' and 'b', respectively.
-    dml_measure_tau_t ***tau;
+    dml_measure_tau_t ***tau_matrix;
     dml_copula_t *copula;
     double tree_weight, max_tree_weight;
     double tree_aic, copula_aic;
@@ -124,9 +124,9 @@ vine_fit_cvine(dml_vine_t *vine,
         }
 
         // Allocate the matrix for pairwise dependence measures.
-        tau = g_malloc_n(n - k, sizeof(dml_measure_tau_t **));
+        tau_matrix = g_malloc_n(n - k, sizeof(dml_measure_tau_t **));
         for (size_t i = 0; i < n - k; i++) {
-            tau[i] = g_malloc0_n(n - k, sizeof(dml_measure_tau_t *));
+            tau_matrix[i] = g_malloc0_n(n - k, sizeof(dml_measure_tau_t *));
         }
 
         // Select the root node of the tree.
@@ -137,12 +137,12 @@ vine_fit_cvine(dml_vine_t *vine,
             for (b = 0; b < igraph_vcount(trees[k]); b++) {
                 if (a != b) {
                     xb = VAP(trees[k], "data", b);
-                    if (tau[(size_t) a][(size_t) b] == NULL) {
-                        tau[(size_t) a][(size_t) b] = dml_measure_tau_alloc(xa, xb);
-                        tau[(size_t) b][(size_t) a] = tau[(size_t) a][(size_t) b];
+                    if (tau_matrix[(size_t) a][(size_t) b] == NULL) {
+                        tau_matrix[(size_t) a][(size_t) b] = dml_measure_tau_alloc(xa, xb);
+                        tau_matrix[(size_t) b][(size_t) a] = tau_matrix[(size_t) a][(size_t) b];
                     }
                     tree_weight += cvine_calculate_weight(
-                            weight, tau[(size_t) a][(size_t) b], xa, xb);
+                            weight, tau_matrix[(size_t) a][(size_t) b], xa, xb);
                 }
             }
             if (gsl_isnan(max_tree_weight) || tree_weight > max_tree_weight) {
@@ -170,7 +170,7 @@ vine_fit_cvine(dml_vine_t *vine,
             xa = VAP(trees[k], "data", a);
             xb = VAP(trees[k], "data", b);
 
-            copula = dml_copula_select(xa, xb, tau[(size_t) a][(size_t) b],
+            copula = dml_copula_select(xa, xb, tau_matrix[(size_t) a][(size_t) b],
                                           indeptest, indeptest_level, types,
                                           types_size, selection);
             SETEAP(trees[k], "copula", e, copula);
@@ -187,11 +187,11 @@ vine_fit_cvine(dml_vine_t *vine,
         if (k > 0) cvine_tree_cleanup(trees[k - 1]);
         for (size_t i = 0; i < n - k; i++) {
             for (size_t j = 0; j < i; j++) {
-                dml_measure_tau_free(tau[i][j]);
+                dml_measure_tau_free(tau_matrix[i][j]);
             }
-            g_free(tau[i]);
+            g_free(tau_matrix[i]);
         }
-        g_free(tau);
+        g_free(tau_matrix);
 
         // Check if the vine should be truncated.
         if (truncation == DML_VINE_TRUNCATION_AIC && tree_aic >= 0) {
