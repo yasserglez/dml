@@ -16,10 +16,11 @@
  */
 
 #include "config.h"
-#include "src/dml.h"
 
 #include <glib.h>
 #include <gsl/gsl_vector.h>
+
+#include "src/dml.h"
 
 static void
 copula_pdf_indep(const dml_copula_t *copula,

@@ -16,11 +16,12 @@
  */
 
 #include "config.h"
-#include "src/dml.h"
 
 #include <glib.h>
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_rng.h>
+
+#include "src/dml.h"
 
 inline dml_copula_t *
 dml_copula_alloc(const dml_copula_type_t type)

@@ -16,11 +16,12 @@
  */
 
 #include "config.h"
-#include "src/dml.h"
 
 #include <glib.h>
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_math.h>
+
+#include "src/dml.h"
 
 static void
 copula_fit_rclayton(dml_copula_t *copula,

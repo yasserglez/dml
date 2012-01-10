@@ -22,6 +22,8 @@ libdml_la_SOURCES = \
     src/vine/vine.c \
     src/vine/cvine.c \
     src/vine/dvine.c \
+    src/vine/linkern.c \
+    src/vine/linkern.h \
     src/vine/rvine.c    
 
 include_HEADERS = src/dml.h

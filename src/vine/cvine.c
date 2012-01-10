@@ -16,13 +16,14 @@
  */
 
 #include "config.h"
-#include "src/dml.h"
 
 #include <glib.h>
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_rng.h>
 #include <igraph/igraph.h>
+
+#include "src/dml.h"
 
 // Macros to save pointers in the numeric attributes of igraph. Portability?
 #define VAP(graph, n, v) ((void *) (long) (igraph_cattribute_VAN((graph), (n), (v))))
@@ -80,7 +81,7 @@ vine_fit_cvine(dml_vine_t *vine,
     size_t k;
     igraph_integer_t e; // Edge id.
     igraph_integer_t a, b; // Vertex id.
-    igraph_integer_t root_vertex; // Vertex id of the root of the tree.
+    igraph_integer_t root_vertex = -1; // Vertex id of the root of the tree.
     size_t root_index; // Variable index corresponding to the root of the tree.
     gsl_vector *xa, *xb; // Samples of 'a' and 'b', respectively.
     dml_measure_tau_t ***tau_matrix;

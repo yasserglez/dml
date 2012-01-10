@@ -16,12 +16,13 @@
  */
 
 #include "config.h"
-#include "src/dml.h"
 
 #include <stdbool.h>
 
 #include <glib.h>
 #include <gsl/gsl_vector.h>
+
+#include "src/dml.h"
 
 dml_copula_t *
 dml_copula_select(const gsl_vector *u,

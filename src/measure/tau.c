@@ -16,7 +16,6 @@
  */
 
 #include "config.h"
-#include "src/dml.h"
 
 #include <stdbool.h>
 
@@ -24,6 +23,8 @@
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_cdf.h>
+
+#include "src/dml.h"
 
 /* Based on the ktau function of the CDVine R package. This function
  * computes Kendall's tau rank correlation coefficient in O(n log n) by means

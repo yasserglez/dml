@@ -16,13 +16,14 @@
  */
 
 #include "config.h"
-#include "src/dml.h"
 
 #include <glib.h>
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_randist.h>
 #include <gsl/gsl_cdf.h>
+
+#include "src/dml.h"
 
 /* Evaluation of the bivariate normal distribution functions. Portions
  * of code from http://www.math.wsu.edu/faculty/genz/software/mvtdstpack.f.

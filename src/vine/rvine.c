@@ -16,7 +16,6 @@
  */
 
 #include "config.h"
-#include "src/dml.h"
 
 #include <glib.h>
 #include <gsl/gsl_matrix.h>
@@ -24,6 +23,8 @@
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_vector_short.h>
 #include <igraph/igraph.h>
+
+#include "src/dml.h"
 
 // Macros to save pointers in the numeric attributes of igraph. Portability?
 #define VAP(graph, n, v) ((void *) (long) (igraph_cattribute_VAN((graph), (n), (v))))

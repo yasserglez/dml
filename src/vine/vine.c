@@ -16,11 +16,12 @@
  */
 
 #include "config.h"
-#include "src/dml.h"
 
 #include <glib.h>
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_matrix.h>
+
+#include "src/dml.h"
 
 inline dml_vine_t *
 dml_vine_alloc(const dml_vine_type_t type, const size_t dimension)
