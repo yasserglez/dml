@@ -1,3 +1,6 @@
+# DML - Dependence Modeling Library
+# Copyright (C) 2011-2012 Yasser González-Fernández <ygonzalezfernandez@gmail.com>
+
 AM_CPPFLAGS = @GLIB_CFLAGS@ @GSL_CFLAGS@ @IGRAPH_CFLAGS@
 AM_CFLAGS = -Wall -Werror -pedantic
 AM_LDFLAGS = @GLIB_LIBS@ @GSL_LIBS@ @IGRAPH_LIBS@
@@ -9,8 +12,8 @@ pkgconfig_DATA = dml.pc
 
 lib_LTLIBRARIES = libdml.la
 
-check_PROGRAMS = testdml
-TESTS = testdml
+check_PROGRAMS = test
+TESTS = test
 
 libdml_la_SOURCES = \
     src/measure/tau.c \
@@ -28,7 +31,7 @@ libdml_la_SOURCES = \
 
 include_HEADERS = src/dml.h
 
-testdml_SOURCES = \
+test_SOURCES = \
     tests/common.h \
     tests/common.c \
     tests/main.c \
@@ -36,11 +39,9 @@ testdml_SOURCES = \
     tests/copula.c \
     tests/vine.c    
 
-testdml_LDADD = libdml.la
+test_LDADD = libdml.la
 
 EXTRA_DIST = \
-    AUTHORS.txt \
-    LICENSE.txt \
     README.txt \
     tests/data/copula.R \
     tests/data/*.dat
