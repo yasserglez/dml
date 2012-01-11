@@ -57,6 +57,7 @@ test_cvine_ran_2d()
 
     dml_vine_free(vine);
     gsl_matrix_free(data);
+    gsl_rng_free(rng);
 }
 
 void
@@ -91,6 +92,7 @@ test_cvine_fit_2d()
     gsl_matrix_free(data);
     dml_copula_free(copula);
     dml_vine_free(vine);
+    gsl_rng_free(rng);
 }
 
 void
@@ -255,6 +257,7 @@ test_dvine_ran_2d()
 
     dml_vine_free(vine);
     gsl_matrix_free(data);
+    gsl_rng_free(rng);
 }
 
 void
@@ -289,6 +292,7 @@ test_dvine_fit_2d()
     gsl_matrix_free(data);
     dml_copula_free(copula);
     dml_vine_free(vine);
+    gsl_rng_free(rng);
 }
 
 void
@@ -459,6 +463,7 @@ test_rvine_ran_2d()
 
     dml_vine_free(vine);
     gsl_matrix_free(data);
+    gsl_rng_free(rng);
 }
 
 void
@@ -493,6 +498,7 @@ test_rvine_fit_2d()
     gsl_matrix_free(data);
     dml_copula_free(copula);
     dml_vine_free(vine);
+    gsl_rng_free(rng);
 }
 
 void
