@@ -26,12 +26,12 @@ rvine_set_weight(igraph_t *graph,
                  const gsl_vector *y)
 {
     double value;
-    dml_measure_tau_t *tau = NULL;
+    dml_measure_t *measure = NULL;
 
     switch (weight) {
     case DML_VINE_WEIGHT_TAU:
-        tau = dml_measure_tau_alloc(x, y);
-        value = 1 - fabs(dml_measure_tau_coef(tau));
+        measure = dml_measure_alloc(x, y);
+        value = 1 - fabs(dml_measure_tau_coef(measure));
         break;
     default:
         value = 0;
@@ -39,7 +39,7 @@ rvine_set_weight(igraph_t *graph,
     }
 
     SETEAN(graph, "weight", e, value);
-    SETEAP(graph, "tau", e, tau);
+    SETEAP(graph, "tau", e, measure);
 }
 
 static inline void
@@ -48,7 +48,7 @@ rvine_tree_cleanup(igraph_t *tree)
     igraph_integer_t e, a;
     gsl_vector *xa;
     gsl_vector_short *Ue;
-    dml_measure_tau_t *tau;
+    dml_measure_t *measure;
 
     for (a = 0; a < igraph_vcount(tree); a++) {
         xa = VAP(tree, "data", a);
@@ -59,8 +59,8 @@ rvine_tree_cleanup(igraph_t *tree)
     for (e = 0; e < igraph_ecount(tree); e++) {
         Ue = EAP(tree, "Ue", e);
         gsl_vector_short_free(Ue);
-        tau = EAP(tree, "tau", e);
-        if (tau != NULL) dml_measure_tau_free(tau);
+        measure = EAP(tree, "tau", e);
+        if (measure != NULL) dml_measure_free(measure);
     }
     DELEA(tree, "Ue");
     DELEA(tree, "weight");
@@ -88,7 +88,7 @@ fit_rvine_trees(igraph_t **trees,
     gsl_vector *xa, *xb; // Samples of 'a' and 'b', respectively.
     gsl_vector_short *Ue, *Ua, *Ub;
     size_t k;
-    dml_measure_tau_t *tau;
+    dml_measure_t *measure;
     double tree_aic, copula_aic;
 
     igraph_i_set_attribute_table(&igraph_cattribute_table);
@@ -192,10 +192,10 @@ fit_rvine_trees(igraph_t **trees,
             igraph_edge(trees[k], e, &a, &b);
             xa = VAP(trees[k], "data", a);
             xb = VAP(trees[k], "data", b);
-            tau = EAP(trees[k], "tau", e);
+            measure = EAP(trees[k], "tau", e);
 
             // Assign bivariate copulas to the edges.
-            copula = dml_copula_select(xa, xb, tau, indeptest,
+            copula = dml_copula_select(xa, xb, measure, indeptest,
                                           indeptest_level, types, types_size,
                                           selection);
             SETEAP(trees[k], "copula", e, copula);

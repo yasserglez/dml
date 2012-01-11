@@ -16,6 +16,7 @@ check_PROGRAMS = test
 TESTS = test
 
 libdml_la_SOURCES = \
+    src/measure/measure.c \
     src/measure/tau.c \
     src/copula/copula.c \
     src/copula/indep.c \
@@ -35,7 +36,7 @@ test_SOURCES = \
     tests/common.h \
     tests/common.c \
     tests/main.c \
-    tests/tau.c \
+    tests/measure.c \
     tests/copula.c \
     tests/vine.c    
 

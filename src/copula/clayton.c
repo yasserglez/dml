@@ -13,18 +13,18 @@ static void
 copula_fit_rclayton(dml_copula_t *copula,
                     const gsl_vector *u,
                     const gsl_vector *v,
-                    dml_measure_tau_t *tau)
+                    dml_measure_t *measure)
 {
     double *params;
     double theta;
     double coef;
 
-    if (tau == NULL) {
-        tau = dml_measure_tau_alloc(u, v);
-        coef = dml_measure_tau_coef(tau);
-        dml_measure_tau_free(tau);
+    if (measure == NULL) {
+        measure = dml_measure_alloc(u, v);
+        coef = dml_measure_tau_coef(measure);
+        dml_measure_free(measure);
     } else {
-    	coef = dml_measure_tau_coef(tau);
+    	coef = dml_measure_tau_coef(measure);
     }
     if (dml_copula_type(copula) == DML_COPULA_CLAYTON
             || dml_copula_type(copula) == DML_COPULA_RCLAYTON180) {

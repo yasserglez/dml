@@ -12,14 +12,13 @@
 
 #include "src/dml.h"
 
-/* Based on the ktau function of the CDVine R package. This function
- * computes Kendall's tau rank correlation coefficient in O(n log n) by means
- * of the algorithm presented in Knight, W. R. (1966). A computer method for
- * calculating Kendall's tau with ungrouped data. Journal of the American
- * Statistical Association 61, 436-439.
- */
+// Based on the ktau function of the CDVine R package. This function
+// computes Kendall's tau rank correlation coefficient in O(n log n) by means
+// of the algorithm presented in Knight, W. R. (1966). A computer method for
+// calculating Kendall's tau with ungrouped data. Journal of the American
+// Statistical Association 61, 436-439.
 static void
-compute_tau_coef(dml_measure_tau_t *tau)
+compute_tau_coef(dml_measure_t *measure)
 {
     double *x, *y, *x_aux, *y_aux, *tmp;
     size_t i, j, k, l, m, n;
@@ -28,17 +27,17 @@ compute_tau_coef(dml_measure_tau_t *tau)
     double score = 0, denom = 0;
     size_t t = 0, u = 0, v = 0;
 
-    n = tau->x->size;
+    n = measure->x->size;
     x = g_malloc_n(n, sizeof(double));
     y = g_malloc_n(n, sizeof(double));
     for (i = 0; i < n; i++) {
-        x[i] = gsl_vector_get(tau->x, i);
-        y[i] = gsl_vector_get(tau->y, i);
+        x[i] = gsl_vector_get(measure->x, i);
+        y[i] = gsl_vector_get(measure->y, i);
     }
     x_aux = g_malloc_n(n, sizeof(double));
     y_aux = g_malloc_n(n, sizeof(double));
 
-    /* 1.1. Sort x and y in x order. */
+    // 1.1. Sort x and y in x order.
     k = 1;
     do {
         l = 0;
@@ -67,7 +66,7 @@ compute_tau_coef(dml_measure_tau_t *tau)
         k *= 2;
     } while (k < n);
 
-    /* 1.2. Count pairs of tied x's in t. */
+    // 1.2. Count pairs of tied x's in t.
     j = 1;
     m = 1;
     for (i = 1; i < n; i++)
@@ -83,7 +82,7 @@ compute_tau_coef(dml_measure_tau_t *tau)
     t += j * (j - 1) / 2;
     v += m * (m - 1) / 2;
 
-    /* 2.1. Sort y again and count exchanges in score. */
+    // 2.1. Sort y again and count exchanges in score.
     k = 1;
     do {
         l = 0;
@@ -113,7 +112,7 @@ compute_tau_coef(dml_measure_tau_t *tau)
         k *= 2;
     } while (k < n);
 
-    /* 2.2. Count pairs of tied y's in u. */
+    // 2.2. Count pairs of tied y's in u.
     j = 1;
     for (i = 1; i < n; i++) {
         if (y[i] == y[i - 1]) {
@@ -125,64 +124,44 @@ compute_tau_coef(dml_measure_tau_t *tau)
     }
     u += j * (j - 1) / 2;
 
-    /* 3. Calculate Kendall's score and denominator. */
+    // 3. Calculate Kendall's score and denominator.
     denom = 0.5 * n * (n - 1);
     score = denom - (2.0 * score + t + u - v);
     denom = sqrt((denom - t) * (denom - u));
-    tau->coef = score / denom;
+    measure->tau_coef = score / denom;
 
     g_free(x); g_free(y);
     g_free(x_aux); g_free(y_aux);
 }
 
 static void
-compute_tau_pvalue(dml_measure_tau_t *tau)
+compute_tau_pvalue(dml_measure_t *measure)
 {
     size_t n;
     double x, coef;
 
-    n = tau->x->size;
-    coef = dml_measure_tau_coef(tau);
+    n = measure->x->size;
+    coef = dml_measure_tau_coef(measure);
     x = sqrt((9 * n * (n - 1)) / (2 * (2 * n + 5))) * fabs(coef);
-    tau->pvalue = 2 * gsl_cdf_ugaussian_Q(x);
-}
-
-dml_measure_tau_t *
-dml_measure_tau_alloc(const gsl_vector *x, const gsl_vector *y)
-{
-    dml_measure_tau_t *tau;
-
-    tau = g_malloc(sizeof(dml_measure_tau_t));
-    tau->x = x;
-    tau->y = y;
-    tau->coef = GSL_NAN;
-    tau->pvalue = GSL_NAN;
-
-    return tau;
+    measure->tau_pvalue = 2 * gsl_cdf_ugaussian_Q(x);
 }
 
 inline double
-dml_measure_tau_coef(dml_measure_tau_t *tau)
+dml_measure_tau_coef(dml_measure_t *measure)
 {
-    if (gsl_isnan(tau->coef)) {
-        compute_tau_coef(tau);
+    if (gsl_isnan(measure->tau_coef)) {
+        compute_tau_coef(measure);
     }
 
-    return tau->coef;
+    return measure->tau_coef;
 }
 
 inline double
-dml_measure_tau_pvalue(dml_measure_tau_t *tau)
+dml_measure_tau_pvalue(dml_measure_t *measure)
 {
-    if (gsl_isnan(tau->pvalue)) {
-        compute_tau_pvalue(tau);
+    if (gsl_isnan(measure->tau_pvalue)) {
+        compute_tau_pvalue(measure);
     }
 
-    return tau->pvalue;
-}
-
-inline void
-dml_measure_tau_free(dml_measure_tau_t *tau)
-{
-    g_free(tau);
+    return measure->tau_pvalue;
 }

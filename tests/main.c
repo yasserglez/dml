@@ -10,6 +10,7 @@ main(int argc, char **argv)
 {
     g_test_init(&argc, &argv, NULL);
 
+    g_test_add_func("/measure/alloc", test_measure_alloc);
     g_test_add_func("/measure/tau/small", test_measure_tau_small);
     g_test_add_func("/measure/tau/large", test_measure_tau_large);
 

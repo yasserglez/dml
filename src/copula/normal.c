@@ -252,18 +252,18 @@ static void
 copula_fit_normal(dml_copula_t *copula,
                   const gsl_vector *u,
                   const gsl_vector *v,
-                  dml_measure_tau_t *tau)
+                  dml_measure_t *measure)
 {
     double *params;
     double rho;
     double coef;
 
-    if (tau == NULL) {
-        tau = dml_measure_tau_alloc(u, v);
-        coef = dml_measure_tau_coef(tau);
-        dml_measure_tau_free(tau);
+    if (measure == NULL) {
+        measure = dml_measure_alloc(u, v);
+        coef = dml_measure_tau_coef(measure);
+        dml_measure_free(measure);
     } else {
-        coef = dml_measure_tau_coef(tau);
+        coef = dml_measure_tau_coef(measure);
     }
     rho = sin(0.5 * M_PI * coef);
 

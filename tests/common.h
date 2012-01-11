@@ -17,6 +17,7 @@ test_vectors_equal(const gsl_vector *x,
                    double rate_eps);
 
 
+void test_measure_alloc();
 void test_measure_tau_small();
 void test_measure_tau_large();
 

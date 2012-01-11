@@ -15,7 +15,7 @@ static void
 dvine_select_order(dml_vine_t *vine,
                    const gsl_matrix *data,
                    dml_vine_weight_t weight,
-                   dml_measure_tau_t ***tau_matrix)
+                   dml_measure_t ***measure_matrix)
 {
     int n;
     double **weight_matrix;
@@ -38,7 +38,7 @@ dvine_select_order(dml_vine_t *vine,
         for (size_t j = 0; j < i; j++) {
             switch (weight) {
             case DML_VINE_WEIGHT_TAU:
-                weight_matrix[i][j] = 1 - fabs(dml_measure_tau_coef(tau_matrix[i][j]));
+                weight_matrix[i][j] = 1 - fabs(dml_measure_tau_coef(measure_matrix[i][j]));
                 break;
             default:
                 weight_matrix[i][j] = 0;
@@ -130,8 +130,8 @@ vine_fit_dvine(dml_vine_t *vine,
                dml_copula_selection_t selection)
 {
     size_t m, n;
-    dml_measure_tau_t ***tau_matrix;
-    dml_measure_tau_t *tau;
+    dml_measure_t ***measure_matrix;
+    dml_measure_t *measure;
     gsl_vector ***v;
     dml_copula_t *copula;
     double tree_aic, copula_aic;
@@ -141,9 +141,9 @@ vine_fit_dvine(dml_vine_t *vine,
     n = data->size2;
 
     // Allocate a matrix with pairwise dependence measures.
-    tau_matrix = g_malloc_n(n, sizeof(dml_measure_tau_t **));
+    measure_matrix = g_malloc_n(n, sizeof(dml_measure_t **));
     for (size_t i = 0; i < n; i++) {
-        tau_matrix[i] = g_malloc0_n(n, sizeof(dml_measure_tau_t *));
+        measure_matrix[i] = g_malloc0_n(n, sizeof(dml_measure_t *));
     }
     x_view = g_malloc_n(n, sizeof(gsl_vector_view));
     // Calculate pairwise dependence measures of the original variables.
@@ -152,8 +152,8 @@ vine_fit_dvine(dml_vine_t *vine,
         x_view[i] = gsl_matrix_column((gsl_matrix *) data, i);
         for (size_t j = 0; j < i; j++) {
             x_view[j] = gsl_matrix_column((gsl_matrix *) data, j);
-            tau_matrix[i][j] = dml_measure_tau_alloc(&x_view[i].vector, &x_view[j].vector);
-            tau_matrix[j][i] = tau_matrix[i][j];
+            measure_matrix[i][j] = dml_measure_alloc(&x_view[i].vector, &x_view[j].vector);
+            measure_matrix[j][i] = measure_matrix[i][j];
         }
     }
 
@@ -161,7 +161,7 @@ vine_fit_dvine(dml_vine_t *vine,
     // determines the structure of the first tree (and therefore the rest of
     // the vine).
     if (n > 2) {
-        dvine_select_order(vine, data, weight, tau_matrix);
+        dvine_select_order(vine, data, weight, measure_matrix);
     } else {
         vine->order[0] = 0;
         vine->order[1] = 1;
@@ -182,8 +182,8 @@ vine_fit_dvine(dml_vine_t *vine,
     // Selection of the copulas in the first tree.
     tree_aic = 0;
     for (size_t i = 1; i <= n - 1; i++) {
-        tau = tau_matrix[vine->order[i-1]][vine->order[i+1-1]];
-        copula = dml_copula_select(v[0][i], v[0][i+1], tau, indeptest,
+        measure = measure_matrix[vine->order[i-1]][vine->order[i+1-1]];
+        copula = dml_copula_select(v[0][i], v[0][i+1], measure, indeptest,
                                    indeptest_level, types, types_size,
                                    selection);
         vine->copulas[0][i-1] = copula;
@@ -196,11 +196,11 @@ vine_fit_dvine(dml_vine_t *vine,
     // Free the matrix with pairwise dependence measures.
     for (size_t i = 1; i < n; i++) {
         for (size_t j = 0; j < i; j++) {
-            dml_measure_tau_free(tau_matrix[i][j]);
+            dml_measure_free(measure_matrix[i][j]);
         }
-        g_free(tau_matrix[i]);
+        g_free(measure_matrix[i]);
     }
-    g_free(tau_matrix);
+    g_free(measure_matrix);
     g_free(x_view);
     // Check if the vine should be truncated.
     if (truncation == DML_VINE_TRUNCATION_AIC && tree_aic >= 0) {

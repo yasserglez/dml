@@ -8,12 +8,12 @@
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_matrix.h>
 
-typedef struct dml_measure_tau_s {
+typedef struct dml_measure_s {
     const gsl_vector *x; // Observations of the first variable.
     const gsl_vector *y; // Observations of the second variable.
-    double coef; // Kendall's tau rank correlation coefficient.
-    double pvalue; // p-value of the independence based on Kendall's tau.
-} dml_measure_tau_t;
+    double tau_coef; // Kendall's tau rank correlation coefficient.
+    double tau_pvalue; // p-value of the independence based on Kendall's tau.
+} dml_measure_t;
 
 
 typedef enum dml_copula_selection_e {
@@ -41,7 +41,7 @@ typedef struct dml_copula_s {
     void (*fit)(struct dml_copula_s *copula,
                 const gsl_vector *u,
                 const gsl_vector *v,
-                dml_measure_tau_t *tau);
+                dml_measure_t *measure);
     void (*pdf)(const struct dml_copula_s *copula,
                 const gsl_vector *u,
                 const gsl_vector *v,
@@ -107,17 +107,17 @@ typedef struct dml_vine_s {
 } dml_vine_t;
 
 
-dml_measure_tau_t *
-dml_measure_tau_alloc(const gsl_vector *x, const gsl_vector *y);
+dml_measure_t *
+dml_measure_alloc(const gsl_vector *x, const gsl_vector *y);
 
 double
-dml_measure_tau_coef(dml_measure_tau_t *tau);
+dml_measure_tau_coef(dml_measure_t *measure);
 
 double
-dml_measure_tau_pvalue(dml_measure_tau_t *tau);
+dml_measure_tau_pvalue(dml_measure_t *measure);
 
 void
-dml_measure_tau_free(dml_measure_tau_t *tau);
+dml_measure_free(dml_measure_t *measure);
 
 
 dml_copula_t *
@@ -147,7 +147,7 @@ dml_copula_type(const dml_copula_t *copula);
 dml_copula_t *
 dml_copula_select(const gsl_vector *u,
                   const gsl_vector *v,
-                  dml_measure_tau_t *tau,
+                  dml_measure_t *measure,
                   const dml_copula_indeptest_t indeptest,
                   const double indeptest_level,
                   const dml_copula_type_t *types,
@@ -158,7 +158,7 @@ void
 dml_copula_fit(dml_copula_t *copula,
                const gsl_vector *u,
                const gsl_vector *v,
-               dml_measure_tau_t *tau);
+               dml_measure_t *measure);
 
 void
 dml_copula_ran(const dml_copula_t *copula,

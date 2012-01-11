@@ -51,10 +51,10 @@ inline void
 dml_copula_fit(dml_copula_t *copula,
                const gsl_vector *u,
                const gsl_vector *v,
-               dml_measure_tau_t *tau)
+               dml_measure_t *measure)
 {
     if (copula->fit != NULL) {
-        copula->fit(copula, u, v, tau);
+        copula->fit(copula, u, v, measure);
     }
 }
 

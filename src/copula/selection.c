@@ -13,7 +13,7 @@
 dml_copula_t *
 dml_copula_select(const gsl_vector *u,
                   const gsl_vector *v,
-                  dml_measure_tau_t *tau,
+                  dml_measure_t *measure,
                   const dml_copula_indeptest_t indeptest,
                   const double indeptest_level,
                   const dml_copula_type_t *types,
@@ -26,8 +26,8 @@ dml_copula_select(const gsl_vector *u,
 
     selected = NULL;
 
-    if (tau == NULL) {
-        tau = dml_measure_tau_alloc(u, v);
+    if (measure == NULL) {
+        measure = dml_measure_alloc(u, v);
         tau_allocated = true;
     } else {
         tau_allocated = false;
@@ -35,7 +35,7 @@ dml_copula_select(const gsl_vector *u,
 
     // Independence tests.
     if (indeptest == DML_COPULA_INDEPTEST_TAU) {
-        double pvalue = dml_measure_tau_pvalue(tau);
+        double pvalue = dml_measure_tau_pvalue(measure);
         if (pvalue >= indeptest_level) {
             // The null hypothesis is not rejected.
             selected = dml_copula_alloc(DML_COPULA_INDEP);
@@ -46,16 +46,16 @@ dml_copula_select(const gsl_vector *u,
     if (selected == NULL && types_size > 0) {
         if (types_size == 1) {
             selected = dml_copula_alloc(types[0]);
-            dml_copula_fit(selected, u, v, tau);
+            dml_copula_fit(selected, u, v, measure);
         } else {
             for (size_t t = 0; t < types_size; t++) {
-                if (dml_measure_tau_coef(tau) > 0
+                if (dml_measure_tau_coef(measure) > 0
                         && (types[t] == DML_COPULA_RCLAYTON90
                                 || types[t] == DML_COPULA_RCLAYTON270)) {
                     // Ignore the copula if it does not represent positive dependence.
                     continue;
                 }
-                if (dml_measure_tau_coef(tau) < 0
+                if (dml_measure_tau_coef(measure) < 0
                         && (types[t] == DML_COPULA_CLAYTON
                                 || types[t] == DML_COPULA_RCLAYTON180)) {
                     // Ignore the copula if it does not represent negative dependence.
@@ -63,7 +63,7 @@ dml_copula_select(const gsl_vector *u,
                 }
 
                 candidate = dml_copula_alloc(types[t]);
-                dml_copula_fit(candidate, u, v, tau);
+                dml_copula_fit(candidate, u, v, measure);
 
                 switch (selection) {
                 case DML_COPULA_SELECTION_AIC:
@@ -86,7 +86,7 @@ dml_copula_select(const gsl_vector *u,
         }
     }
 
-    if (tau_allocated) dml_measure_tau_free(tau);
+    if (tau_allocated) dml_measure_free(measure);
 
     return selected;
 }
