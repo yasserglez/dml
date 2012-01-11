@@ -226,10 +226,9 @@ vine_fit_cvine(dml_vine_t *vine,
     gsl_vector_short_free(selected_roots);
 }
 
-/* Based on Algorithm 1 of Aas, K. and Czado, C. and Frigessi, A. and Bakken, H.
- * Pair-Copula Constructions of Multiple Dependence. Insurance: Mathematics
- * and Economics, 2009, Vol. 44, pp. 182-198.
- */
+// Based on Algorithm 1 of Aas, K. and Czado, C. and Frigessi, A. and Bakken, H.
+// Pair-Copula Constructions of Multiple Dependence. Insurance: Mathematics
+// and Economics, 2009, Vol. 44, pp. 182-198.
 static void
 vine_ran_cvine(const dml_vine_t *vine,
                const gsl_rng *rng,

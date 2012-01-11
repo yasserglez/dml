@@ -11,10 +11,9 @@
 
 #include "src/dml.h"
 
-/* Evaluation of the bivariate normal distribution functions. Portions
- * of code from http://www.math.wsu.edu/faculty/genz/software/mvtdstpack.f.
- * The FORTRAN code was translated into C using f2c (version 20090411).
- */
+// Evaluation of the bivariate normal distribution functions. Portions
+// of code from http://www.math.wsu.edu/faculty/genz/software/mvtdstpack.f.
+// The FORTRAN code was translated into C using f2c (version 20090411).
 
 #define abs(x) ((x) >= 0 ? (x) : -(x))
 #define max(a,b) ((a) >= (b) ? (a) : (b))
@@ -256,16 +255,16 @@ copula_fit_normal(dml_copula_t *copula,
 {
     double *params;
     double rho;
-    double coef;
+    double tau;
 
     if (measure == NULL) {
         measure = dml_measure_alloc(u, v);
-        coef = dml_measure_tau_coef(measure);
+        tau = dml_measure_tau_coef(measure);
         dml_measure_free(measure);
     } else {
-        coef = dml_measure_tau_coef(measure);
+        tau = dml_measure_tau_coef(measure);
     }
-    rho = sin(0.5 * M_PI * coef);
+    rho = sin(0.5 * M_PI * tau);
 
     params = copula->data;
     params[0] = rho;
