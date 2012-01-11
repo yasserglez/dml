@@ -1,3 +1,6 @@
+# DML - Dependence Modeling Library
+# Copyright (C) 2011-2012 Yasser González-Fernández <ygonzalezfernandez@gmail.com>
+
 AC_PREREQ([2.67])
 LT_PREREQ([2.2.6b])
 
@@ -30,6 +33,8 @@ if test "$ac_cv_c_inline" != no ; then
 fi
 
 # Checks for library functions.
+AC_CHECK_FUNCS([floor pow sqrt])
+AC_FUNC_MALLOC
 
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_HEADERS([config.h])

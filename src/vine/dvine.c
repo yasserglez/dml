@@ -1,40 +1,117 @@
-/* DML - Dependence Modeling Library
- * Copyright (C) 2011 Yasser González-Fernández <ygonzalezfernandez@gmail.com>
- *
- * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the Free
- * Software Foundation, either version 3 of the License, or (at your option)
- * any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along with
- * this program. If not, see <http://www.gnu.org/licenses/>.
- */
+// DML - Dependence Modeling Library
+// Copyright (C) 2011-2012 Yasser González-Fernández <ygonzalezfernandez@gmail.com>
 
 #include "config.h"
-#include "src/dml.h"
 
 #include <glib.h>
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_rng.h>
 
+#include "src/dml.h"
+#include "src/vine/linkern.h"
+
 static void
 dvine_select_order(dml_vine_t *vine,
                    const gsl_matrix *data,
+                   dml_vine_weight_t weight,
                    dml_measure_tau_t ***tau_matrix)
 {
-    size_t n;
+    int n;
+    double **weight_matrix;
+    int ncount, ecount;
+    double max_weight;
+    int precision;
+    int k;
+    int *elist, *elen;
+    CCrandstate rstate;
+    CCdatagroup dat;
+    int *cycle;
+    double val;
+    int cut_index;
 
-    n = data->size2;
+    n = (int) vine->dimension;
 
+    weight_matrix = g_malloc_n(n, sizeof(double *));
     for (size_t i = 0; i < n; i++) {
-        vine->order[i] = i;
+        weight_matrix[i] = g_malloc_n(n, sizeof(double));
+        for (size_t j = 0; j < i; j++) {
+            switch (weight) {
+            case DML_VINE_WEIGHT_TAU:
+                weight_matrix[i][j] = 1 - fabs(dml_measure_tau_coef(tau_matrix[i][j]));
+                break;
+            default:
+                weight_matrix[i][j] = 0;
+                break;
+            }
+            weight_matrix[j][i] = weight_matrix[i][j];
+        }
     }
+
+    ncount = n + 1; // Original variables plus the dummy node.
+    ecount = ncount * (ncount - 1) / 2;
+
+    // Information to round the weights to integers.
+    max_weight = fabs(weight_matrix[1][0]);
+    for (int i = 1; i < n; i++) {
+        for (int j = 0; j < i; j++) {
+            if (fabs(weight_matrix[i][j]) > max_weight) {
+                max_weight = fabs(weight_matrix[i][j]);
+            }
+        }
+    }
+    precision = floor(log10((pow(2, 31) - 1) / max_weight / ncount));
+
+    // Initialization of the list and edge lengths.
+    k = 0;
+    elist = g_malloc_n(2 * ecount, sizeof(int));
+    elen = g_malloc_n(ecount, sizeof(int));
+    for (int i = 1; i < ncount; i++) {
+        for (int j = 0; j < i; j++) {
+            elist[2*k] = i;
+            elist[2*k+1] = j;
+            if (i == ncount - 1) {
+                elen[k] = 0;
+            } else {
+                elen[k] = weight_matrix[i][j] * pow(10, precision);
+            }
+            k++;
+        }
+    }
+
+    // Compute an approximate solution for the TSP instance using the Chained
+    // Lin-Kernighan heuristic as implemented in Concorde. The initial tour is
+    // generated randomly and random walk kicks are used. The linkern.h and
+    // linkern.c files contain selected functions from Concorde with minor
+    // modifications to avoid unneeed dependences. Refer to the original
+    // source code of Concorde and its documentation for more information.
+    CCutil_sprand(1, &rstate);
+    CCutil_graph2dat_matrix(ncount, ecount, elist, elen, 0, &dat);
+    cycle = g_malloc_n(ncount, sizeof(int));
+    CClinkern_tour(ncount, &dat, ecount, elist, 100000000, ncount,
+                   NULL, cycle, &val, &rstate);
+    CCutil_freedatagroup(&dat);
+    free(elist);
+    free(elen);
+
+    // Cut the cycle at the dummy node.
+    cut_index = -1;
+    for (int i = 0; i < ncount; i++) {
+        if (cut_index > 0) {
+            vine->order[i - cut_index - 1] = cycle[i];
+        } else if (cycle[i] == ncount - 1) {
+            cut_index = i;
+        }
+    }
+    for (int i = 0; i < cut_index; i++) {
+        vine->order[ncount - cut_index + i - 1] = cycle[i];
+    }
+
+    g_free(cycle);
+    for (size_t i = 0; i < n; i++) {
+        g_free(weight_matrix[i]);
+    }
+    g_free(weight_matrix);
 }
 
 /* Based on Algorithm 4 of Aas, K. and Czado, C. and Frigessi, A. and Bakken, H.
@@ -58,6 +135,7 @@ vine_fit_dvine(dml_vine_t *vine,
     gsl_vector ***v;
     dml_copula_t *copula;
     double tree_aic, copula_aic;
+    gsl_vector_view *x_view;
 
     m = data->size1;
     n = data->size2;
@@ -67,19 +145,27 @@ vine_fit_dvine(dml_vine_t *vine,
     for (size_t i = 0; i < n; i++) {
         tau_matrix[i] = g_malloc0_n(n, sizeof(dml_measure_tau_t *));
     }
+    x_view = g_malloc_n(n, sizeof(gsl_vector_view));
     // Calculate pairwise dependence measures of the original variables.
-    for (size_t i = 0; i < n; i++) {
-        gsl_vector_const_view xi_view = gsl_matrix_const_column(data, i);
+    x_view[0] = gsl_matrix_column((gsl_matrix *) data, 0);
+    for (size_t i = 1; i < n; i++) {
+        x_view[i] = gsl_matrix_column((gsl_matrix *) data, i);
         for (size_t j = 0; j < i; j++) {
-            gsl_vector_const_view xj_view = gsl_matrix_const_column(data, j);
-            tau_matrix[i][j] = dml_measure_tau_alloc(&xi_view.vector, &xj_view.vector);
-            tau_matrix[i][j] = tau_matrix[j][i];
+            x_view[j] = gsl_matrix_column((gsl_matrix *) data, j);
+            tau_matrix[i][j] = dml_measure_tau_alloc(&x_view[i].vector, &x_view[j].vector);
+            tau_matrix[j][i] = tau_matrix[i][j];
         }
     }
+
     // Select the order of the variables in the vine. The order of the variables
     // determines the structure of the first tree (and therefore the rest of
     // the vine).
-    dvine_select_order(vine, data, tau_matrix);
+    if (n > 2) {
+        dvine_select_order(vine, data, weight, tau_matrix);
+    } else {
+        vine->order[0] = 0;
+        vine->order[1] = 1;
+    }
 
     // This allocates more memory than required. In the future, the code should
     // be modified to use 0-based indexes for the v vector.
@@ -108,13 +194,14 @@ vine_fit_dvine(dml_vine_t *vine,
         }
     }
     // Free the matrix with pairwise dependence measures.
-    for (size_t i = 0; i < n; i++) {
+    for (size_t i = 1; i < n; i++) {
         for (size_t j = 0; j < i; j++) {
             dml_measure_tau_free(tau_matrix[i][j]);
         }
         g_free(tau_matrix[i]);
     }
     g_free(tau_matrix);
+    g_free(x_view);
     // Check if the vine should be truncated.
     if (truncation == DML_VINE_TRUNCATION_AIC && tree_aic >= 0) {
         // Undo the construction of the first tree, free memory and
