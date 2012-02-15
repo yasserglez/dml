@@ -146,7 +146,7 @@ compute_tau_pvalue(dml_measure_t *measure)
     measure->tau_pvalue = 2 * gsl_cdf_ugaussian_Q(x);
 }
 
-inline double
+double
 dml_measure_tau_coef(dml_measure_t *measure)
 {
     if (gsl_isnan(measure->tau_coef)) {
@@ -156,7 +156,7 @@ dml_measure_tau_coef(dml_measure_t *measure)
     return measure->tau_coef;
 }
 
-inline double
+double
 dml_measure_tau_pvalue(dml_measure_t *measure)
 {
     if (gsl_isnan(measure->tau_pvalue)) {

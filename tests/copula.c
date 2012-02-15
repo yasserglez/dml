@@ -254,6 +254,7 @@ test_copula_select_indeptest_none()
 
     gsl_vector_free(u);
     gsl_vector_free(v);
+    gsl_rng_free(rng);
 }
 
 void
@@ -294,6 +295,7 @@ test_copula_select_indeptest_tau()
 
     gsl_vector_free(u);
     gsl_vector_free(v);
+    gsl_rng_free(rng);
 }
 
 void
@@ -329,4 +331,5 @@ test_copula_select_aic()
 
     gsl_vector_free(u);
     gsl_vector_free(v);
+    gsl_rng_free(rng);
 }

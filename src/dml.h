@@ -11,8 +11,12 @@
 typedef struct dml_measure_s {
     const gsl_vector *x; // Observations of the first variable.
     const gsl_vector *y; // Observations of the second variable.
+    // Kendall's tau.
     double tau_coef; // Kendall's tau rank correlation coefficient.
     double tau_pvalue; // p-value of the independence based on Kendall's tau.
+    // Empirical copula (independence test based on a Cramer-von Mises statistic).
+    double empcop_cvm_stat;
+    double empcop_cvm_pvalue;
 } dml_measure_t;
 
 
@@ -115,6 +119,9 @@ dml_measure_tau_coef(dml_measure_t *measure);
 
 double
 dml_measure_tau_pvalue(dml_measure_t *measure);
+
+void
+dml_measure_empcop_cvm_sim(size_t n, size_t N, const gsl_rng *rng, double *stats);
 
 void
 dml_measure_free(dml_measure_t *measure);

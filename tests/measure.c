@@ -62,3 +62,37 @@ test_measure_tau_large()
     fclose(f);
     g_free(path);
 }
+
+void
+test_measure_empcop_cvm()
+{
+    size_t n = 100, N = 100;
+    gsl_rng *rng;
+    gsl_vector *u, *v;
+    dml_measure_t *measure;
+    dml_copula_t *copula;
+    double *stats;
+
+    rng = gsl_rng_alloc(gsl_rng_taus);
+    gsl_rng_set(rng, g_test_rand_int());
+
+    u = gsl_vector_alloc(n);
+    v = gsl_vector_alloc(n);
+
+    copula = dml_copula_alloc_normal(0.75);
+    dml_copula_ran(copula, rng, u, v);
+    measure = dml_measure_alloc(u, v);
+    stats = g_malloc0_n(N, sizeof(double));
+    dml_measure_empcop_cvm_sim(n, N, rng, stats);
+    for (size_t i = 0; i < N; i ++) {
+        printf("%f\n", stats[i]);
+
+    }
+
+    dml_copula_free(copula);
+    dml_measure_free(measure);
+    g_free(stats);
+    gsl_vector_free(u);
+    gsl_vector_free(v);
+    gsl_rng_free(rng);
+}
