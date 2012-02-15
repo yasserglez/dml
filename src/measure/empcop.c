@@ -95,11 +95,25 @@ I_n(int n, int p, double *J, double *K, double *L)
 static void
 compute_empcop_cvm_stat(dml_measure_t *measure)
 {
+    measure->empcop_cvm_stat = 0.72806;
 }
 
 static void
-compute_empcop_cvm_pvalue(dml_measure_t *measure, double *I_n_0)
+compute_empcop_cvm_pvalue(dml_measure_t *measure,
+                          size_t num_stats,
+                          double *stats)
 {
+    size_t k, count;
+    double stat, pvalue;
+
+    stat = dml_measure_empcop_cvm_stat(measure);
+    count = 0;
+    for (k = 0; k < num_stats; k++)
+        if (stats[k] >= stat)
+            count++;
+    pvalue = (double) (count + 0.5) / (num_stats + 1.0);
+
+    measure->empcop_cvm_pvalue = pvalue;
 }
 
 // Based on the simulate_empirical_copula function of the copula R package.
@@ -110,8 +124,8 @@ compute_empcop_cvm_pvalue(dml_measure_t *measure, double *I_n_0)
 // generator) and stats (values of the global statistic under independence).
 void
 dml_measure_empcop_cvm_sim(size_t n,
-                           size_t N,
                            const gsl_rng *rng,
+                           size_t num_stats,
                            double *stats)
 {
     int i, j, k, index;
@@ -122,7 +136,7 @@ dml_measure_empcop_cvm_sim(size_t n,
     double r;
 
     /* N repetitions */
-    for (k = 0; k < N; k++) {
+    for (k = 0; k < num_stats; k++) {
         /* Generate data */
         for (j = 0; j < 2; j++) {
             for (i = 0; i < n; i++)
@@ -163,10 +177,12 @@ dml_measure_empcop_cvm_stat(dml_measure_t *measure)
 }
 
 double
-dml_measure_empcop_cvm_pvalue(dml_measure_t *measure, double *stats)
+dml_measure_empcop_cvm_pvalue(dml_measure_t *measure,
+                              size_t num_stats,
+                              double *stats)
 {
     if (gsl_isnan(measure->empcop_cvm_pvalue)) {
-        compute_empcop_cvm_pvalue(measure, stats);
+        compute_empcop_cvm_pvalue(measure, num_stats, stats);
     }
 
     return measure->empcop_cvm_pvalue;

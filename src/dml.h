@@ -121,7 +121,18 @@ double
 dml_measure_tau_pvalue(dml_measure_t *measure);
 
 void
-dml_measure_empcop_cvm_sim(size_t n, size_t N, const gsl_rng *rng, double *stats);
+dml_measure_empcop_cvm_sim(size_t n,
+                           const gsl_rng *rng,
+                           size_t num_stats,
+                           double *stats);
+
+double
+dml_measure_empcop_cvm_stat(dml_measure_t *measure);
+
+double
+dml_measure_empcop_cvm_pvalue(dml_measure_t *measure,
+                              size_t num_stats,
+                              double *stats);
 
 void
 dml_measure_free(dml_measure_t *measure);

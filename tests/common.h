@@ -20,7 +20,8 @@ test_vectors_equal(const gsl_vector *x,
 void test_measure_alloc();
 void test_measure_tau_small();
 void test_measure_tau_large();
-void test_measure_empcop_cvm();
+void test_measure_empcop_cvm_rejected();
+void test_measure_empcop_cvm_not_rejected();
 
 
 void test_indep_alloc();
