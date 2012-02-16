@@ -130,8 +130,10 @@ compute_tau_coef(dml_measure_t *measure)
     denom = sqrt((denom - t) * (denom - u));
     measure->tau_coef = score / denom;
 
-    g_free(x); g_free(y);
-    g_free(x_aux); g_free(y_aux);
+    g_free(x);
+    g_free(y);
+    g_free(x_aux);
+    g_free(y_aux);
 }
 
 static void
