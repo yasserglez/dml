@@ -29,6 +29,9 @@ cvine_calculate_weight(dml_vine_weight_t weight,
     case DML_VINE_WEIGHT_TAU:
         value = fabs(dml_measure_tau_coef(measure));
         break;
+    case DML_VINE_WEIGHT_CVM_STAT:
+        value = dml_measure_empcop_cvm_stat(measure);
+        break;
     default:
         value = 0;
         break;

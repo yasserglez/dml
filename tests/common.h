@@ -74,7 +74,8 @@ void test_copula_select_aic();
 void test_cvine_alloc();
 void test_cvine_ran_2d();
 void test_cvine_fit_2d();
-void test_cvine_ran_fit_5d_normal_indep();
+void test_cvine_ran_fit_tau_5d_normal_indep();
+void test_cvine_ran_fit_cvm_stat_5d_normal_indep();
 void test_cvine_ran_fit_20d_normal_trunc();
 
 void test_dvine_alloc();

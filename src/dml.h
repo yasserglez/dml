@@ -72,6 +72,8 @@ typedef struct dml_copula_s {
 
 typedef enum dml_vine_weight_e {
     DML_VINE_WEIGHT_TAU, // Absolute value of Kendall's tau.
+    DML_VINE_WEIGHT_CVM_STAT, // Cramer-von Mises statistic based on the
+                              // empirical copula and the product copula.
 } dml_vine_weight_t;
 
 typedef enum dml_vine_truncation_e {
