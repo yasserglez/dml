@@ -38,7 +38,7 @@ dml_copula_select(const gsl_vector *u,
     // Independence tests.
     if (indeptest == DML_COPULA_INDEPTEST_TAU) {
         pvalue = dml_measure_tau_pvalue(measure);
-    } else if (indeptest == DML_COPULA_INDEPTEST_TAU) {
+    } else if (indeptest == DML_COPULA_INDEPTEST_CVM) {
         pvalue = dml_measure_empcop_cvm_pvalue(measure, rng);
     }
     if (pvalue >= indeptest_level) {

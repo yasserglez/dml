@@ -138,7 +138,8 @@ test_cvine_ran_fit_20d_normal_trunc()
 }
 
 static void
-test_cvine_ran_fit_5d_normal_indep(dml_vine_weight_t weight)
+test_cvine_ran_fit_5d_normal_indep(dml_vine_weight_t weight,
+                                   dml_copula_indeptest_t indeptest)
 {
     size_t n = 5, m = 1000;
     gsl_rng *rng;
@@ -174,9 +175,8 @@ test_cvine_ran_fit_5d_normal_indep(dml_vine_weight_t weight)
     vine_data = gsl_matrix_alloc(m, n);
     dml_vine_ran(vine, rng, vine_data);
     fitted = dml_vine_alloc(DML_VINE_CVINE, n);
-    dml_vine_fit(fitted, vine_data, weight, DML_VINE_TRUNCATION_NONE,
-            DML_COPULA_INDEPTEST_TAU, 0.05, &types[0], types_size,
-            DML_COPULA_SELECTION_AIC, rng);
+    dml_vine_fit(fitted, vine_data, weight, DML_VINE_TRUNCATION_NONE, indeptest,
+                 0.05, &types[0], types_size, DML_COPULA_SELECTION_AIC, rng);
     fitted_data = gsl_matrix_alloc(m, n);
     dml_vine_ran(fitted, rng, fitted_data);
 
@@ -209,13 +209,13 @@ test_cvine_ran_fit_5d_normal_indep(dml_vine_weight_t weight)
 void
 test_cvine_ran_fit_tau_5d_normal_indep()
 {
-    test_cvine_ran_fit_5d_normal_indep(DML_VINE_WEIGHT_TAU);
+    test_cvine_ran_fit_5d_normal_indep(DML_VINE_WEIGHT_TAU, DML_COPULA_INDEPTEST_TAU);
 }
 
 void
-test_cvine_ran_fit_cvm_stat_5d_normal_indep()
+test_cvine_ran_fit_cvm_5d_normal_indep()
 {
-    test_cvine_ran_fit_5d_normal_indep(DML_VINE_WEIGHT_CVM);
+    test_cvine_ran_fit_5d_normal_indep(DML_VINE_WEIGHT_CVM, DML_COPULA_INDEPTEST_CVM);
 }
 
 void
@@ -295,7 +295,8 @@ test_dvine_fit_2d()
 }
 
 static void
-test_dvine_ran_fit_5d_normal_indep(dml_vine_weight_t weight)
+test_dvine_ran_fit_5d_normal_indep(dml_vine_weight_t weight,
+                                   dml_copula_indeptest_t indeptest)
 {
     size_t n = 5, m = 1000;
     gsl_rng *rng;
@@ -331,9 +332,8 @@ test_dvine_ran_fit_5d_normal_indep(dml_vine_weight_t weight)
     vine_data = gsl_matrix_alloc(m, n);
     dml_vine_ran(vine, rng, vine_data);
     fitted = dml_vine_alloc(DML_VINE_DVINE, n);
-    dml_vine_fit(fitted, vine_data, weight, DML_VINE_TRUNCATION_NONE,
-                 DML_COPULA_INDEPTEST_TAU, 0.05, &types[0], types_size,
-                 DML_COPULA_SELECTION_AIC, rng);
+    dml_vine_fit(fitted, vine_data, weight, DML_VINE_TRUNCATION_NONE, indeptest,
+                 0.05, &types[0], types_size, DML_COPULA_SELECTION_AIC, rng);
     fitted_data = gsl_matrix_alloc(m, n);
     dml_vine_ran(fitted, rng, fitted_data);
 
@@ -369,13 +369,13 @@ test_dvine_ran_fit_5d_normal_indep(dml_vine_weight_t weight)
 void
 test_dvine_ran_fit_tau_5d_normal_indep()
 {
-    test_dvine_ran_fit_5d_normal_indep(DML_VINE_WEIGHT_TAU);
+    test_dvine_ran_fit_5d_normal_indep(DML_VINE_WEIGHT_TAU, DML_COPULA_INDEPTEST_TAU);
 }
 
 void
-test_dvine_ran_fit_cvm_stat_5d_normal_indep()
+test_dvine_ran_fit_cvm_5d_normal_indep()
 {
-    test_dvine_ran_fit_5d_normal_indep(DML_VINE_WEIGHT_CVM);
+    test_dvine_ran_fit_5d_normal_indep(DML_VINE_WEIGHT_CVM, DML_COPULA_INDEPTEST_CVM);
 }
 
 void
@@ -582,7 +582,7 @@ test_rvine_ran_fit_3d_normal()
 static void
 test_rvine_ran_fit_7d_normal(dml_vine_weight_t weight)
 {
-    size_t n = 7, m = 5000;
+    size_t n = 7, m = 1000;
     gsl_rng *rng;
     dml_copula_type_t types[] = { DML_COPULA_NORMAL };
     size_t types_size = 1;
@@ -697,14 +697,14 @@ test_rvine_ran_fit_tau_7d_normal()
 }
 
 void
-test_rvine_ran_fit_cvm_stat_7d_normal()
+test_rvine_ran_fit_cvm_7d_normal()
 {
     test_rvine_ran_fit_7d_normal(DML_VINE_WEIGHT_CVM);
 }
 
 void test_rvine_ran_fit_9d_normal_trunc()
 {
-    size_t n = 7, m = 5000;
+    size_t n = 7, m = 1000;
     gsl_rng *rng;
     dml_copula_type_t types[] = { DML_COPULA_NORMAL };
     size_t types_size = 1;

@@ -64,9 +64,9 @@ test_measure_tau_large()
 }
 
 void
-test_measure_empcop_cvm_rejected()
+test_measure_empcop_cvm_normal()
 {
-    size_t n = 100;
+    size_t n = 500;
     gsl_rng *rng;
     gsl_vector *u, *v;
     dml_measure_t *measure;
@@ -91,9 +91,9 @@ test_measure_empcop_cvm_rejected()
 }
 
 void
-test_measure_empcop_cvm_not_rejected()
+test_measure_empcop_cvm_indep()
 {
-    size_t n = 100;
+    size_t n = 500;
     gsl_rng *rng;
     gsl_vector *u, *v;
     dml_measure_t *measure;

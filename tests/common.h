@@ -20,8 +20,8 @@ test_vectors_equal(const gsl_vector *x,
 void test_measure_alloc();
 void test_measure_tau_small();
 void test_measure_tau_large();
-void test_measure_empcop_cvm_rejected();
-void test_measure_empcop_cvm_not_rejected();
+void test_measure_empcop_cvm_normal();
+void test_measure_empcop_cvm_indep();
 
 
 void test_indep_alloc();
@@ -68,6 +68,7 @@ void test_rclayton270_hinv();
 
 void test_copula_select_indeptest_none();
 void test_copula_select_indeptest_tau();
+void test_copula_select_indeptest_cvm();
 void test_copula_select_aic();
 
 
@@ -75,14 +76,14 @@ void test_cvine_alloc();
 void test_cvine_ran_2d();
 void test_cvine_fit_2d();
 void test_cvine_ran_fit_tau_5d_normal_indep();
-void test_cvine_ran_fit_cvm_stat_5d_normal_indep();
+void test_cvine_ran_fit_cvm_5d_normal_indep();
 void test_cvine_ran_fit_20d_normal_trunc();
 
 void test_dvine_alloc();
 void test_dvine_ran_2d();
 void test_dvine_fit_2d();
 void test_dvine_ran_fit_tau_5d_normal_indep();
-void test_dvine_ran_fit_cvm_stat_5d_normal_indep();
+void test_dvine_ran_fit_cvm_5d_normal_indep();
 void test_dvine_ran_fit_20d_normal_trunc();
 
 void test_rvine_alloc();
@@ -90,7 +91,7 @@ void test_rvine_ran_2d();
 void test_rvine_fit_2d();
 void test_rvine_ran_fit_3d_normal();
 void test_rvine_ran_fit_tau_7d_normal();
-void test_rvine_ran_fit_cvm_stat_7d_normal();
+void test_rvine_ran_fit_cvm_7d_normal();
 void test_rvine_ran_fit_9d_normal_trunc();
 
 #endif /* TEST_H_ */

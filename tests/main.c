@@ -13,8 +13,8 @@ main(int argc, char **argv)
     g_test_add_func("/measure/alloc", test_measure_alloc);
     g_test_add_func("/measure/tau/small", test_measure_tau_small);
     g_test_add_func("/measure/tau/large", test_measure_tau_large);
-    g_test_add_func("/measure/empcop_cvm/rejected", test_measure_empcop_cvm_rejected);
-    g_test_add_func("/measure/empcop_cvm/not_rejected", test_measure_empcop_cvm_not_rejected);
+    g_test_add_func("/measure/empcop_cvm/normal", test_measure_empcop_cvm_normal);
+    g_test_add_func("/measure/empcop_cvm/indep", test_measure_empcop_cvm_indep);
 
     g_test_add_func("/copula/indep/alloc", test_indep_alloc);
     g_test_add_func("/copula/indep/fit", test_indep_fit);
@@ -54,26 +54,27 @@ main(int argc, char **argv)
     g_test_add_func("/copula/rclayton270/hinv", test_rclayton270_hinv);
     g_test_add_func("/copula/select/indeptest_none", test_copula_select_indeptest_none);
     g_test_add_func("/copula/select/indeptest_tau", test_copula_select_indeptest_tau);
+    g_test_add_func("/copula/select/indeptest_cvm", test_copula_select_indeptest_cvm);
     g_test_add_func("/copula/select/aic", test_copula_select_aic);
 
     g_test_add_func("/vine/cvine/alloc", test_cvine_alloc);
     g_test_add_func("/vine/cvine/ran_2d", test_cvine_ran_2d);
     g_test_add_func("/vine/cvine/fit_2d", test_cvine_fit_2d);
     g_test_add_func("/vine/cvine/ran_fit_tau_5d_normal_indep", test_cvine_ran_fit_tau_5d_normal_indep);
-    g_test_add_func("/vine/cvine/ran_fit_cvm_stat_5d_normal_indep", test_cvine_ran_fit_cvm_stat_5d_normal_indep);
+    g_test_add_func("/vine/cvine/ran_fit_cvm_5d_normal_indep", test_cvine_ran_fit_cvm_5d_normal_indep);
     g_test_add_func("/vine/cvine/ran_fit_20d_normal_trunc", test_cvine_ran_fit_20d_normal_trunc);
     g_test_add_func("/vine/dvine/alloc", test_dvine_alloc);
     g_test_add_func("/vine/dvine/ran_2d", test_dvine_ran_2d);
     g_test_add_func("/vine/dvine/fit_2d", test_dvine_fit_2d);
     g_test_add_func("/vine/dvine/ran_fit_tau_5d_normal_indep", test_dvine_ran_fit_tau_5d_normal_indep);
-    g_test_add_func("/vine/dvine/ran_fit_cvm_stat_5d_normal_indep", test_dvine_ran_fit_cvm_stat_5d_normal_indep);
+    g_test_add_func("/vine/dvine/ran_fit_cvm_5d_normal_indep", test_dvine_ran_fit_cvm_5d_normal_indep);
     g_test_add_func("/vine/dvine/ran_fit_20d_normal_trunc", test_dvine_ran_fit_20d_normal_trunc);
     g_test_add_func("/vine/rvine/alloc", test_rvine_alloc);
     g_test_add_func("/vine/rvine/ran_2d", test_rvine_ran_2d);
     g_test_add_func("/vine/rvine/fit_2d", test_rvine_fit_2d);
     g_test_add_func("/vine/rvine/ran_fit_3d_normal", test_rvine_ran_fit_3d_normal);
     g_test_add_func("/vine/rvine/ran_fit_tau_7d_normal", test_rvine_ran_fit_tau_7d_normal);
-    g_test_add_func("/vine/rvine/ran_fit_cvm_stat_7d_normal", test_rvine_ran_fit_cvm_stat_7d_normal);
+    g_test_add_func("/vine/rvine/ran_fit_cvm_7d_normal", test_rvine_ran_fit_cvm_7d_normal);
     g_test_add_func("/vine/rvine/ran_fit_9d_normal_trunc", test_rvine_ran_fit_9d_normal_trunc);
 
     return g_test_run();
