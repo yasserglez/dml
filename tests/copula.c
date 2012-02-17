@@ -217,6 +217,32 @@ TEST_DML_COPULA_FUNC_P(rclayton270, h, clayton_theta_negative, 20)
 TEST_DML_COPULA_FUNC_P(rclayton270, hinv, clayton_theta_negative, 20)
 
 void
+test_normal_gof()
+{
+    size_t n = 500;
+    gsl_rng *rng;
+    gsl_vector *u, *v;
+    dml_copula_t *copula;
+    double pvalue;
+
+    rng = gsl_rng_alloc(gsl_rng_taus);
+    gsl_rng_set(rng, g_test_rand_int());
+
+    u = gsl_vector_alloc(n);
+    v = gsl_vector_alloc(n);
+
+    copula = dml_copula_alloc_normal(0.75);
+    dml_copula_ran(copula, rng, u, v);
+    dml_copula_gof(copula, u, v, &pvalue);
+    printf("%f\n", pvalue);
+
+    dml_copula_free(copula);
+    gsl_vector_free(u);
+    gsl_vector_free(v);
+    gsl_rng_free(rng);
+}
+
+void
 test_copula_select_indeptest_none()
 {
     size_t m = 1000;
@@ -237,7 +263,7 @@ test_copula_select_indeptest_none()
     dml_copula_ran(copula, rng, u, v);
     selected = dml_copula_select(u, v, NULL, DML_COPULA_INDEPTEST_NONE, 1,
                                  &types[0], types_size,
-                                 DML_COPULA_SELECTION_AIC, rng);
+                                 DML_COPULA_SELECTION_AIC, 0, rng);
     g_assert(DML_COPULA_NORMAL == dml_copula_type(selected));
     dml_copula_free(selected);
     dml_copula_free(copula);
@@ -247,7 +273,7 @@ test_copula_select_indeptest_none()
     dml_copula_ran(copula, rng, u, v);
     selected = dml_copula_select(u, v, NULL, DML_COPULA_INDEPTEST_NONE, 1,
                                  &types[0], types_size,
-                                 DML_COPULA_SELECTION_AIC, rng);
+                                 DML_COPULA_SELECTION_AIC, 0, rng);
     g_assert(DML_COPULA_NORMAL == dml_copula_type(selected));
     dml_copula_free(selected);
     dml_copula_free(copula);
@@ -277,7 +303,7 @@ test_copula_select_indeptest(dml_copula_indeptest_t indeptest)
     copula = dml_copula_alloc_indep();
     dml_copula_ran(copula, rng, u, v);
     selected = dml_copula_select(u, v, NULL, indeptest, 0.01, &types[0],
-                                 types_size, DML_COPULA_SELECTION_AIC, rng);
+                                 types_size, DML_COPULA_SELECTION_AIC, 0, rng);
     g_assert(dml_copula_type(copula) == dml_copula_type(selected));
     dml_copula_free(selected);
     dml_copula_free(copula);
@@ -286,7 +312,7 @@ test_copula_select_indeptest(dml_copula_indeptest_t indeptest)
     copula = dml_copula_alloc_normal(0.75);
     dml_copula_ran(copula, rng, u, v);
     selected = dml_copula_select(u, v, NULL, indeptest, 0.01, &types[0],
-                                 types_size, DML_COPULA_SELECTION_AIC, rng);
+                                 types_size, DML_COPULA_SELECTION_AIC, 0, rng);
     g_assert(dml_copula_type(copula) == dml_copula_type(selected));
     dml_copula_free(selected);
     dml_copula_free(copula);
@@ -333,7 +359,7 @@ test_copula_select_aic()
         dml_copula_ran(copula, rng, u, v);
         selected = dml_copula_select(u, v, NULL, DML_COPULA_INDEPTEST_NONE, 1,
                                      &types[0], num_copulas,
-                                     DML_COPULA_SELECTION_AIC, rng);
+                                     DML_COPULA_SELECTION_AIC, 0, rng);
         g_assert(dml_copula_type(copula) == dml_copula_type(selected));
         dml_copula_free(selected);
         dml_copula_free(copula);

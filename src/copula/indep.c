@@ -67,6 +67,7 @@ dml_copula_alloc_indep()
     copula->h = copula_h_indep;
     copula->hinv = copula_hinv_indep;
     copula->aic = copula_aic_indep;
+    copula->gof = NULL;
     copula->free = NULL; // Disabled.
     copula->data = NULL; // Disabled.
 

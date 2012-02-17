@@ -67,6 +67,10 @@ typedef struct dml_copula_s {
                 const gsl_vector *u,
                 const gsl_vector *v,
                 double *aic);
+    void (*gof)(const struct dml_copula_s *copula,
+                const gsl_vector *u,
+                const gsl_vector *v,
+                double *pvalue);
     void (*free)(struct dml_copula_s *copula);
 } dml_copula_t;
 
@@ -167,6 +171,7 @@ dml_copula_select(const gsl_vector *u,
                   const dml_copula_type_t *types,
                   const size_t types_size,
                   const dml_copula_selection_t selection,
+                  const double gof_level,
                   const gsl_rng *rng);
 
 void
@@ -210,6 +215,12 @@ dml_copula_aic(const dml_copula_t *copula,
                const gsl_vector *u,
                const gsl_vector *v,
                double *aic);
+
+void
+dml_copula_gof(const dml_copula_t *copula,
+               const gsl_vector *u,
+               const gsl_vector *v,
+               double *pvalue);
 
 void
 dml_copula_free(dml_copula_t *copula);

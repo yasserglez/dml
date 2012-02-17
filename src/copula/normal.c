@@ -247,6 +247,44 @@ mvbvn(double *lower, double *upper, int *infin, double *correl)
 #undef abs
 #undef max
 
+// Functions from the copula R package that implement the normal copula
+// goodness-of-fit test based on a Cramer-von Mises statistic with p-value
+// computation based on the multiplier approach.
+
+static double
+empcop(int n, int p, double *U, double *V, int m, int k)
+{
+    int i, j, ind;
+    double ec = 0.0;
+
+    for (i = 0; i < n; i++) {
+        ind = 1;
+        for (j = 0; j < p; j++)
+            ind *= (U[i + n * j] <= V[k + m * j]);
+        ec += (double) ind;
+    }
+    return ec / (double) n;
+}
+
+static void
+cramer_vonMises_2(double *U,
+                  int *n,
+                  double *V,
+                  int *m,
+                  double *Ctheta,
+                  double *stat)
+{
+    int i;
+    double s = 0.0, diff;
+
+    for (i = 0; i < *m; i++) {
+        diff = empcop(*n, 2, U, V, *m, i) - Ctheta[i];
+        s += diff * diff;
+    }
+
+    *stat = s * (*n) / (*m);
+}
+
 static void
 copula_fit_normal(dml_copula_t *copula,
                   const gsl_vector *u,
@@ -430,6 +468,37 @@ copula_aic_normal(const dml_copula_t *copula,
 }
 
 static void
+copula_gof_normal(const dml_copula_t *copula,
+                  const gsl_vector *u,
+                  const gsl_vector *v,
+                  double *pvalue)
+{
+    int n;
+    gsl_vector *cdf;
+    double stat;
+    double *U, *Ctheta;
+
+    n = (int) u->size;
+    cdf = gsl_vector_alloc(n);
+    U = g_malloc_n(2 * n, sizeof(double));
+    Ctheta = g_malloc_n(n, sizeof(double));
+
+    dml_copula_cdf(copula, u, v, cdf);
+    for (size_t i = 0; i < n; i++) {
+        U[i + n * 0] = gsl_vector_get(u, i);
+        U[i + n * 1] = gsl_vector_get(v, i);
+        Ctheta[i] = gsl_vector_get(cdf, i);
+    }
+    cramer_vonMises_2(U, &n, U, &n, Ctheta, &stat);
+
+    *pvalue = stat;
+
+    gsl_vector_free(cdf);
+    g_free(U);
+    g_free(Ctheta);
+}
+
+static void
 copula_free_normal(dml_copula_t *copula)
 {
     g_free(copula->data);
@@ -449,6 +518,7 @@ dml_copula_alloc_normal(const double rho)
     copula->h = copula_h_normal;
     copula->hinv = copula_hinv_normal;
     copula->aic = copula_aic_normal;
+    copula->gof = copula_gof_normal;
     copula->free = copula_free_normal;
     copula->data = g_malloc(sizeof(double));
     params = copula->data;

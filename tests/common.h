@@ -37,6 +37,7 @@ void test_normal_pdf();
 void test_normal_cdf();
 void test_normal_h();
 void test_normal_hinv();
+void test_normal_gof();
 
 void test_clayton_alloc();
 void test_clayton_fit();

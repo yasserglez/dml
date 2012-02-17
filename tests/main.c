@@ -28,6 +28,7 @@ main(int argc, char **argv)
     g_test_add_func("/copula/normal/cdf", test_normal_cdf);
     g_test_add_func("/copula/normal/h", test_normal_h);
     g_test_add_func("/copula/normal/hinv", test_normal_hinv);
+    g_test_add_func("/copula/normal/gof", test_normal_gof);
     g_test_add_func("/copula/clayton/alloc", test_clayton_alloc);
     g_test_add_func("/copula/clayton/fit", test_clayton_fit);
     g_test_add_func("/copula/clayton/pdf", test_clayton_pdf);

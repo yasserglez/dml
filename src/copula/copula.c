@@ -122,6 +122,15 @@ dml_copula_aic(const dml_copula_t *copula,
 }
 
 inline void
+dml_copula_gof(const dml_copula_t *copula,
+               const gsl_vector *u,
+               const gsl_vector *v,
+               double *pvalue)
+{
+    copula->gof(copula, u, v, pvalue);
+}
+
+inline void
 dml_copula_free(dml_copula_t *copula)
 {
     if (copula->free != NULL) {

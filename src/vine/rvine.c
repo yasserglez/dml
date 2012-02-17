@@ -205,7 +205,7 @@ fit_rvine_trees(igraph_t **trees,
             // Assign bivariate copulas to the edges.
             copula = dml_copula_select(xa, xb, measure, indeptest,
                                        indeptest_level, types, types_size,
-                                       selection, rng);
+                                       selection, 0, rng);
             SETEAP(trees[k], "copula", e, copula);
 
             // Get information for the truncation of the vine.

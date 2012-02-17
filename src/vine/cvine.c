@@ -165,7 +165,7 @@ vine_fit_cvine(dml_vine_t *vine,
 
             copula = dml_copula_select(xa, xb, measure_matrix[(size_t) a][(size_t) b],
                                        indeptest, indeptest_level, types,
-                                       types_size, selection, rng);
+                                       types_size, selection, 0, rng);
             SETEAP(trees[k], "copula", e, copula);
 
             // Get information for the truncation of the vine.
