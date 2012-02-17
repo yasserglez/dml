@@ -567,8 +567,8 @@ test_rvine_ran_fit_3d_normal()
     gsl_rng_free(rng);
 }
 
-void
-test_rvine_ran_fit_7d_normal()
+static void
+test_rvine_ran_fit_7d_normal(dml_vine_weight_t weight)
 {
     size_t n = 7, m = 5000;
     gsl_rng *rng;
@@ -646,7 +646,7 @@ test_rvine_ran_fit_7d_normal()
     vine_data = gsl_matrix_alloc(m, n);
     dml_vine_ran(vine, rng, vine_data);
     fitted = dml_vine_alloc(DML_VINE_RVINE, n);
-    dml_vine_fit(fitted, vine_data, DML_VINE_WEIGHT_TAU, DML_VINE_TRUNCATION_NONE,
+    dml_vine_fit(fitted, vine_data, weight, DML_VINE_TRUNCATION_NONE,
              DML_COPULA_INDEPTEST_NONE, 0, &types[0], types_size,
              DML_COPULA_SELECTION_AIC);
 
@@ -676,6 +676,18 @@ test_rvine_ran_fit_7d_normal()
     gsl_matrix_free(vine_data);
     gsl_matrix_free(fitted_data);
     gsl_rng_free(rng);
+}
+
+void
+test_rvine_ran_fit_tau_7d_normal()
+{
+    test_rvine_ran_fit_7d_normal(DML_VINE_WEIGHT_TAU);
+}
+
+void
+test_rvine_ran_fit_cvm_stat_7d_normal()
+{
+    test_rvine_ran_fit_7d_normal(DML_VINE_WEIGHT_CVM_STAT);
 }
 
 void test_rvine_ran_fit_9d_normal_trunc()

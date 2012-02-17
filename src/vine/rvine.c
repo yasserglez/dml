@@ -26,12 +26,18 @@ rvine_set_weight(igraph_t *graph,
                  const gsl_vector *y)
 {
     double value;
-    dml_measure_t *measure = NULL;
+    dml_measure_t *measure;
+
+    // The weight is minimized.
+
+    measure = dml_measure_alloc(x, y);
 
     switch (weight) {
     case DML_VINE_WEIGHT_TAU:
-        measure = dml_measure_alloc(x, y);
         value = 1 - fabs(dml_measure_tau_coef(measure));
+        break;
+    case DML_VINE_WEIGHT_CVM_STAT:
+        value = -dml_measure_empcop_cvm_stat(measure);
         break;
     default:
         value = 0;

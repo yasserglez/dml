@@ -25,6 +25,8 @@ cvine_calculate_weight(dml_vine_weight_t weight,
 {
     double value;
 
+    // The weight is maximized.
+
     switch (weight) {
     case DML_VINE_WEIGHT_TAU:
         value = fabs(dml_measure_tau_coef(measure));
