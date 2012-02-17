@@ -13,6 +13,13 @@
 
 #include "src/dml.h"
 
+// Global variables for the approximate independent realizations of the test
+// statistics under mutual independence. This memory is not freed!
+
+static size_t stats_sample_size = 0;
+static size_t stats_count = 100;
+static double *stats = NULL;
+
 // Auxiliar functions from the copula R package.
 
 static void
@@ -142,71 +149,72 @@ compute_empcop_cvm_stat(dml_measure_t *measure)
 }
 
 static void
-compute_empcop_cvm_pvalue(dml_measure_t *measure,
-                          size_t num_stats,
-                          double *stats)
+compute_empcop_cvm_pvalue(dml_measure_t *measure, const gsl_rng *rng)
 {
     size_t k, count;
-    double stat, pvalue;
+    int i, j, index;
+    double *R, *J, *K, *L;
+    double r, stat, pvalue;
 
-    stat = dml_measure_empcop_cvm_stat(measure);
-    count = 0;
-    for (k = 0; k < num_stats; k++)
-        if (stats[k] >= stat)
-            count++;
-    pvalue = (double) (count + 0.5) / (num_stats + 1.0);
+    if (stats_sample_size != measure->x->size) {
+        // Update the realizations of the test statistics. This code is based
+        /// on the simulate_empirical_copula function of the copula R package.
+        // It generates approximate independent realizations of the test
+        // statistics under mutual independence. The original code of the
+        // function was modified, since only the bivariate case is used here.
 
-    measure->empcop_cvm_pvalue = pvalue;
-}
+        // Update the sample size.
+        stats_sample_size = measure->x->size;
 
-// Based on the simulate_empirical_copula function of the copula R package.
-// This function generates approximate independent realizations of the test
-// statistics under mutual independence. The original code of the function
-// was modified, since only the bivariate case is used here. The parameters
-// are: n (sample size), N (number of repetitions), rng (GSL random number
-// generator) and stats (values of the global statistic under independence).
-void
-dml_measure_empcop_cvm_sim(size_t n,
-                           const gsl_rng *rng,
-                           size_t num_stats,
-                           double *stats)
-{
-    int i, j, k, index;
-    double *R = g_malloc0_n(n * 2, sizeof(double));
-    double *J = g_malloc0_n(n * n * 2, sizeof(double));
-    double *K = g_malloc0_n(n * 2, sizeof(double));
-    double *L = g_malloc0_n(2, sizeof(double));
-    double r;
-
-    /* N repetitions */
-    for (k = 0; k < num_stats; k++) {
-        /* Generate data */
-        for (j = 0; j < 2; j++) {
-            for (i = 0; i < n; i++)
-                R[i + n * j] = i + 1;
-
-            /* Permutation = Random ranks in column j */
-            for (i = n - 1; i >= 0; i--) {
-                r = R[j * n + i];
-                index = (int) ((i + 1) * gsl_rng_uniform(rng));
-                R[j * n + i] = R[j * n + index];
-                R[j * n + index] = r;
-            }
+        if (stats == NULL) {
+            // First execution. This memory is not freed!
+            stats = g_malloc0_n(stats_count, sizeof(double));
         }
 
-        /* Compute arrays J, K, L */
-        J_u(n, 2, R, J);
-        K_array(n, 2, J, K);
-        L_array(n, 2, K, L);
+        R = g_malloc0_n(stats_sample_size * 2, sizeof(double));
+        J = g_malloc0_n(stats_sample_size * stats_sample_size * 2, sizeof(double));
+        K = g_malloc0_n(stats_sample_size * 2, sizeof(double));
+        L = g_malloc0_n(2, sizeof(double));
 
-        /* Global statistic under independence */
-        stats[k] = I_n(n, 2, J, K, L);
+        for (k = 0; k < stats_count; k++) {
+            /* Generate data */
+            for (j = 0; j < 2; j++) {
+                for (i = 0; i < stats_sample_size; i++)
+                    R[i + stats_sample_size * j] = i + 1;
+
+                /* Permutation = Random ranks in column j */
+                for (i = stats_sample_size - 1; i >= 0; i--) {
+                    r = R[j * stats_sample_size + i];
+                    index = (int) ((i + 1) * gsl_rng_uniform(rng));
+                    R[j * stats_sample_size + i] = R[j * stats_sample_size + index];
+                    R[j * stats_sample_size + index] = r;
+                }
+            }
+
+            /* Compute arrays J, K, L */
+            J_u(stats_sample_size, 2, R, J);
+            K_array(stats_sample_size, 2, J, K);
+            L_array(stats_sample_size, 2, K, L);
+
+            /* Global statistic under independence */
+            stats[k] = I_n(stats_sample_size, 2, J, K, L);
+        }
+
+        g_free(R);
+        g_free(J);
+        g_free(K);
+        g_free(L);
     }
 
-    g_free(R);
-    g_free(J);
-    g_free(K);
-    g_free(L);
+    // Compute the corresponding p-value.
+    stat = dml_measure_empcop_cvm_stat(measure);
+    count = 0;
+    for (k = 0; k < stats_count; k++)
+        if (stats[k] >= stat)
+            count++;
+    pvalue = (double) (count + 0.5) / (stats_count + 1.0);
+
+    measure->empcop_cvm_pvalue = pvalue;
 }
 
 double
@@ -220,12 +228,10 @@ dml_measure_empcop_cvm_stat(dml_measure_t *measure)
 }
 
 double
-dml_measure_empcop_cvm_pvalue(dml_measure_t *measure,
-                              size_t num_stats,
-                              double *stats)
+dml_measure_empcop_cvm_pvalue(dml_measure_t *measure, const gsl_rng *rng)
 {
     if (gsl_isnan(measure->empcop_cvm_pvalue)) {
-        compute_empcop_cvm_pvalue(measure, num_stats, stats);
+        compute_empcop_cvm_pvalue(measure, rng);
     }
 
     return measure->empcop_cvm_pvalue;

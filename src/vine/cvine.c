@@ -31,7 +31,7 @@ cvine_calculate_weight(dml_vine_weight_t weight,
     case DML_VINE_WEIGHT_TAU:
         value = fabs(dml_measure_tau_coef(measure));
         break;
-    case DML_VINE_WEIGHT_CVM_STAT:
+    case DML_VINE_WEIGHT_CVM:
         value = dml_measure_empcop_cvm_stat(measure);
         break;
     default:
@@ -64,7 +64,8 @@ vine_fit_cvine(dml_vine_t *vine,
                double indeptest_level,
                const dml_copula_type_t *types,
                size_t types_size,
-               dml_copula_selection_t selection)
+               dml_copula_selection_t selection,
+               const gsl_rng *rng)
 {
     size_t m, n;
     igraph_t **trees;
@@ -163,8 +164,8 @@ vine_fit_cvine(dml_vine_t *vine,
             xb = VAP(trees[k], "data", b);
 
             copula = dml_copula_select(xa, xb, measure_matrix[(size_t) a][(size_t) b],
-                                          indeptest, indeptest_level, types,
-                                          types_size, selection);
+                                       indeptest, indeptest_level, types,
+                                       types_size, selection, rng);
             SETEAP(trees[k], "copula", e, copula);
 
             // Get information for the truncation of the vine.

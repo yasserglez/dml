@@ -18,28 +18,32 @@ dml_copula_select(const gsl_vector *u,
                   const double indeptest_level,
                   const dml_copula_type_t *types,
                   const size_t types_size,
-                  const dml_copula_selection_t selection)
+                  const dml_copula_selection_t selection,
+                  const gsl_rng *rng)
 {
     dml_copula_t *selected, *candidate;
     double selected_fit = 0, candidate_fit = 0; // Initialized to avoid GCC warnings.
-    bool tau_allocated;
+    bool measure_dealloc;
+    double pvalue = -1;
 
     selected = NULL;
 
     if (measure == NULL) {
         measure = dml_measure_alloc(u, v);
-        tau_allocated = true;
+        measure_dealloc = true;
     } else {
-        tau_allocated = false;
+        measure_dealloc = false;
     }
 
     // Independence tests.
     if (indeptest == DML_COPULA_INDEPTEST_TAU) {
-        double pvalue = dml_measure_tau_pvalue(measure);
-        if (pvalue >= indeptest_level) {
-            // The null hypothesis is not rejected.
-            selected = dml_copula_alloc(DML_COPULA_INDEP);
-        }
+        pvalue = dml_measure_tau_pvalue(measure);
+    } else if (indeptest == DML_COPULA_INDEPTEST_TAU) {
+        pvalue = dml_measure_empcop_cvm_pvalue(measure, rng);
+    }
+    if (pvalue >= indeptest_level) {
+        // The null hypothesis is not rejected.
+        selected = dml_copula_alloc(DML_COPULA_INDEP);
     }
 
     // Goodness-of-fit.
@@ -86,7 +90,7 @@ dml_copula_select(const gsl_vector *u,
         }
     }
 
-    if (tau_allocated) dml_measure_free(measure);
+    if (measure_dealloc) dml_measure_free(measure);
 
     return selected;
 }

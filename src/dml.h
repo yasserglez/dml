@@ -12,13 +12,12 @@ typedef struct dml_measure_s {
     const gsl_vector *x; // Observations of the first variable.
     const gsl_vector *y; // Observations of the second variable.
     // Kendall's tau.
-    double tau_coef; // Kendall's tau rank correlation coefficient.
-    double tau_pvalue; // p-value of the independence based on Kendall's tau.
+    double tau_coef;
+    double tau_pvalue;
     // Empirical copula (independence test based on a Cramer-von Mises statistic).
     double empcop_cvm_stat;
     double empcop_cvm_pvalue;
 } dml_measure_t;
-
 
 typedef enum dml_copula_selection_e {
     DML_COPULA_SELECTION_AIC, // Akaike Information Criterion.
@@ -27,6 +26,8 @@ typedef enum dml_copula_selection_e {
 typedef enum dml_copula_indeptest_e {
     DML_COPULA_INDEPTEST_NONE, // Disabled.
     DML_COPULA_INDEPTEST_TAU, // Test based on Kendall's tau.
+    DML_COPULA_INDEPTEST_CVM, // Cramer-von Mises statistic based on the
+                              // empirical copula and the product copula.
 } dml_copula_indeptest_t;
 
 typedef enum dml_copula_type_e {
@@ -72,8 +73,8 @@ typedef struct dml_copula_s {
 
 typedef enum dml_vine_weight_e {
     DML_VINE_WEIGHT_TAU, // Absolute value of Kendall's tau.
-    DML_VINE_WEIGHT_CVM_STAT, // Cramer-von Mises statistic based on the
-                              // empirical copula and the product copula.
+    DML_VINE_WEIGHT_CVM, // Cramer-von Mises statistic based on the
+                         // empirical copula and the product copula.
 } dml_vine_weight_t;
 
 typedef enum dml_vine_truncation_e {
@@ -104,7 +105,8 @@ typedef struct dml_vine_s {
                 const double indeptest_level,
                 const dml_copula_type_t *types,
                 const size_t types_size,
-                const dml_copula_selection_t selection);
+                const dml_copula_selection_t selection,
+                const gsl_rng *rng);
     void (*ran)(const struct dml_vine_s *vine,
                 const gsl_rng *rng,
                 gsl_matrix *data);
@@ -122,19 +124,11 @@ dml_measure_tau_coef(dml_measure_t *measure);
 double
 dml_measure_tau_pvalue(dml_measure_t *measure);
 
-void
-dml_measure_empcop_cvm_sim(size_t n,
-                           const gsl_rng *rng,
-                           size_t num_stats,
-                           double *stats);
-
 double
 dml_measure_empcop_cvm_stat(dml_measure_t *measure);
 
 double
-dml_measure_empcop_cvm_pvalue(dml_measure_t *measure,
-                              size_t num_stats,
-                              double *stats);
+dml_measure_empcop_cvm_pvalue(dml_measure_t *measure, const gsl_rng *rng);
 
 void
 dml_measure_free(dml_measure_t *measure);
@@ -172,7 +166,8 @@ dml_copula_select(const gsl_vector *u,
                   const double indeptest_level,
                   const dml_copula_type_t *types,
                   const size_t types_size,
-                  const dml_copula_selection_t selection);
+                  const dml_copula_selection_t selection,
+                  const gsl_rng *rng);
 
 void
 dml_copula_fit(dml_copula_t *copula,
@@ -244,7 +239,8 @@ dml_vine_fit(dml_vine_t *vine,
              const double indeptest_level,
              const dml_copula_type_t *types,
              const size_t types_size,
-             const dml_copula_selection_t selection);
+             const dml_copula_selection_t selection,
+             const gsl_rng *rng);
 
 void
 dml_vine_ran(const dml_vine_t *vine, const gsl_rng *rng, gsl_matrix *data);

@@ -66,12 +66,11 @@ test_measure_tau_large()
 void
 test_measure_empcop_cvm_rejected()
 {
-    size_t n = 100, num_stats = 100;
+    size_t n = 100;
     gsl_rng *rng;
     gsl_vector *u, *v;
     dml_measure_t *measure;
     dml_copula_t *copula;
-    double *stats;
 
     rng = gsl_rng_alloc(gsl_rng_taus);
     gsl_rng_set(rng, g_test_rand_int());
@@ -82,11 +81,8 @@ test_measure_empcop_cvm_rejected()
     copula = dml_copula_alloc_normal(0.75);
     dml_copula_ran(copula, rng, u, v);
     measure = dml_measure_alloc(u, v);
-    stats = g_malloc0_n(num_stats, sizeof(double));
-    dml_measure_empcop_cvm_sim(n, rng, num_stats, stats);
-    g_assert(dml_measure_empcop_cvm_pvalue(measure, num_stats, stats) < 0.01);
+    g_assert(dml_measure_empcop_cvm_pvalue(measure, rng) < 0.01);
 
-    g_free(stats);
     dml_measure_free(measure);
     dml_copula_free(copula);
     gsl_vector_free(u);
@@ -97,12 +93,11 @@ test_measure_empcop_cvm_rejected()
 void
 test_measure_empcop_cvm_not_rejected()
 {
-    size_t n = 100, num_stats = 100;
+    size_t n = 100;
     gsl_rng *rng;
     gsl_vector *u, *v;
     dml_measure_t *measure;
     dml_copula_t *copula;
-    double *stats;
 
     rng = gsl_rng_alloc(gsl_rng_taus);
     gsl_rng_set(rng, g_test_rand_int());
@@ -113,11 +108,8 @@ test_measure_empcop_cvm_not_rejected()
     copula = dml_copula_alloc_indep();
     dml_copula_ran(copula, rng, u, v);
     measure = dml_measure_alloc(u, v);
-    stats = g_malloc0_n(num_stats, sizeof(double));
-    dml_measure_empcop_cvm_sim(n, rng, num_stats, stats);
-    g_assert(dml_measure_empcop_cvm_pvalue(measure, num_stats, stats) > 0.01);
+    g_assert(dml_measure_empcop_cvm_pvalue(measure, rng) > 0.01);
 
-    g_free(stats);
     dml_measure_free(measure);
     dml_copula_free(copula);
     gsl_vector_free(u);

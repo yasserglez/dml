@@ -37,7 +37,7 @@ rvine_set_weight(igraph_t *graph,
     case DML_VINE_WEIGHT_TAU:
         value = 1 - fabs(dml_measure_tau_coef(measure));
         break;
-    case DML_VINE_WEIGHT_CVM_STAT:
+    case DML_VINE_WEIGHT_CVM:
         value = measure->x->size - dml_measure_empcop_cvm_stat(measure);
         break;
     default:
@@ -83,7 +83,8 @@ fit_rvine_trees(igraph_t **trees,
                 double indeptest_level,
                 const dml_copula_type_t *types,
                 size_t types_size,
-                dml_copula_selection_t selection)
+                dml_copula_selection_t selection,
+                const gsl_rng *rng)
 {
     size_t m, n;
     igraph_t *graph;
@@ -203,8 +204,8 @@ fit_rvine_trees(igraph_t **trees,
 
             // Assign bivariate copulas to the edges.
             copula = dml_copula_select(xa, xb, measure, indeptest,
-                                          indeptest_level, types, types_size,
-                                          selection);
+                                       indeptest_level, types, types_size,
+                                       selection, rng);
             SETEAP(trees[k], "copula", e, copula);
 
             // Get information for the truncation of the vine.
@@ -364,13 +365,14 @@ vine_fit_rvine(dml_vine_t *vine,
                double indeptest_level,
                const dml_copula_type_t *types,
                size_t types_size,
-               dml_copula_selection_t selection)
+               dml_copula_selection_t selection,
+               const gsl_rng *rng)
 {
     igraph_t **trees;
 
     trees = g_malloc0_n(data->size2 - 1, sizeof(igraph_t *));
     fit_rvine_trees(trees, data, weight, truncation, indeptest, indeptest_level,
-                    types, types_size, selection);
+                    types, types_size, selection, rng);
     rvine_trees_to_vine(vine, trees);
 
     for (size_t i = 0; i < data->size2 - 1; i++) {

@@ -47,10 +47,11 @@ dml_vine_fit(dml_vine_t *vine,
              const double indeptest_level,
              const dml_copula_type_t *types,
              const size_t types_size,
-             const dml_copula_selection_t selection)
+             const dml_copula_selection_t selection,
+             const gsl_rng *rng)
 {
     vine->fit(vine, data, weight, truncation, indeptest, indeptest_level, types,
-              types_size, selection);
+              types_size, selection, rng);
 }
 
 inline void

@@ -43,7 +43,7 @@ dvine_select_order(dml_vine_t *vine,
                 weight_matrix[i][j] = 1
                         - fabs(dml_measure_tau_coef(measure_matrix[i][j]));
                 break;
-            case DML_VINE_WEIGHT_CVM_STAT:
+            case DML_VINE_WEIGHT_CVM:
                 weight_matrix[i][j] = measure_matrix[i][j]->x->size
                         - dml_measure_empcop_cvm_stat(measure_matrix[i][j]);
                 break;
@@ -133,7 +133,8 @@ vine_fit_dvine(dml_vine_t *vine,
                double indeptest_level,
                const dml_copula_type_t *types,
                size_t types_size,
-               dml_copula_selection_t selection)
+               dml_copula_selection_t selection,
+               const gsl_rng *rng)
 {
     size_t m, n;
     dml_measure_t ***measure_matrix;
@@ -191,7 +192,7 @@ vine_fit_dvine(dml_vine_t *vine,
         measure = measure_matrix[vine->order[i-1]][vine->order[i+1-1]];
         copula = dml_copula_select(v[0][i], v[0][i+1], measure, indeptest,
                                    indeptest_level, types, types_size,
-                                   selection);
+                                   selection, rng);
         vine->copulas[0][i-1] = copula;
         // Get information for the truncation of the vine.
         if (truncation == DML_VINE_TRUNCATION_AIC) {
@@ -259,7 +260,7 @@ vine_fit_dvine(dml_vine_t *vine,
         for (size_t i = 1; i <= n - j; i++) { // Edges of the tree.
             copula = dml_copula_select(v[j-1][2*i-1], v[j-1][2*i], NULL,
                                        indeptest, indeptest_level, types,
-                                       types_size, selection);
+                                       types_size, selection, rng);
             vine->copulas[j-1][i-1] = copula;
             // Get information for the truncation of the vine.
             if (truncation == DML_VINE_TRUNCATION_AIC) {
