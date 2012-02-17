@@ -4,6 +4,7 @@
 #include "config.h"
 
 #include <glib.h>
+#include <gsl/gsl_math.h>
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_vector.h>
@@ -37,7 +38,7 @@ rvine_set_weight(igraph_t *graph,
         value = 1 - fabs(dml_measure_tau_coef(measure));
         break;
     case DML_VINE_WEIGHT_CVM_STAT:
-        value = -dml_measure_empcop_cvm_stat(measure);
+        value = measure->x->size - dml_measure_empcop_cvm_stat(measure);
         break;
     default:
         value = 0;

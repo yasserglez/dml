@@ -65,7 +65,8 @@ main(int argc, char **argv)
     g_test_add_func("/vine/dvine/alloc", test_dvine_alloc);
     g_test_add_func("/vine/dvine/ran_2d", test_dvine_ran_2d);
     g_test_add_func("/vine/dvine/fit_2d", test_dvine_fit_2d);
-    g_test_add_func("/vine/dvine/ran_fit_5d_normal_indep", test_dvine_ran_fit_5d_normal_indep);
+    g_test_add_func("/vine/dvine/ran_fit_tau_5d_normal_indep", test_dvine_ran_fit_tau_5d_normal_indep);
+    g_test_add_func("/vine/dvine/ran_fit_cvm_stat_5d_normal_indep", test_dvine_ran_fit_cvm_stat_5d_normal_indep);
     g_test_add_func("/vine/dvine/ran_fit_20d_normal_trunc", test_dvine_ran_fit_20d_normal_trunc);
     g_test_add_func("/vine/rvine/alloc", test_rvine_alloc);
     g_test_add_func("/vine/rvine/ran_2d", test_rvine_ran_2d);

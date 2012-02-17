@@ -32,13 +32,20 @@ dvine_select_order(dml_vine_t *vine,
 
     n = (int) vine->dimension;
 
+    // The weight is minimized.
+
     weight_matrix = g_malloc_n(n, sizeof(double *));
     for (size_t i = 0; i < n; i++) {
         weight_matrix[i] = g_malloc_n(n, sizeof(double));
         for (size_t j = 0; j < i; j++) {
             switch (weight) {
             case DML_VINE_WEIGHT_TAU:
-                weight_matrix[i][j] = 1 - fabs(dml_measure_tau_coef(measure_matrix[i][j]));
+                weight_matrix[i][j] = 1
+                        - fabs(dml_measure_tau_coef(measure_matrix[i][j]));
+                break;
+            case DML_VINE_WEIGHT_CVM_STAT:
+                weight_matrix[i][j] = measure_matrix[i][j]->x->size
+                        - dml_measure_empcop_cvm_stat(measure_matrix[i][j]);
                 break;
             default:
                 weight_matrix[i][j] = 0;

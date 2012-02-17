@@ -81,7 +81,8 @@ void test_cvine_ran_fit_20d_normal_trunc();
 void test_dvine_alloc();
 void test_dvine_ran_2d();
 void test_dvine_fit_2d();
-void test_dvine_ran_fit_5d_normal_indep();
+void test_dvine_ran_fit_tau_5d_normal_indep();
+void test_dvine_ran_fit_cvm_stat_5d_normal_indep();
 void test_dvine_ran_fit_20d_normal_trunc();
 
 void test_rvine_alloc();
