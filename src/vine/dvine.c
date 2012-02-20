@@ -145,6 +145,7 @@ vine_fit_dvine(dml_vine_t *vine,
     dml_copula_t *copula;
     double tree_aic, copula_aic;
     gsl_vector_view *x_view;
+    gsl_permutation **ranks;
 
     m = data->size1;
     n = data->size2;
@@ -155,7 +156,9 @@ vine_fit_dvine(dml_vine_t *vine,
         measure_matrix[i] = g_malloc0_n(n, sizeof(dml_measure_t *));
     }
     x_view = g_malloc_n(n, sizeof(gsl_vector_view));
+
     // Calculate pairwise dependence measures of the original variables.
+    ranks = g_malloc0_n(n, sizeof(gsl_permutation *));
     x_view[0] = gsl_matrix_column((gsl_matrix *) data, 0);
     for (size_t i = 1; i < n; i++) {
         x_view[i] = gsl_matrix_column((gsl_matrix *) data, i);
@@ -163,8 +166,25 @@ vine_fit_dvine(dml_vine_t *vine,
             x_view[j] = gsl_matrix_column((gsl_matrix *) data, j);
             measure_matrix[i][j] = dml_measure_alloc(&x_view[i].vector, &x_view[j].vector);
             measure_matrix[j][i] = measure_matrix[i][j];
+
+            // Pre-calculate the ranks of the variables.
+            if (ranks[i] == NULL) {
+                ranks[i] = dml_measure_x_rank(measure_matrix[i][j]);
+            } else {
+                measure_matrix[i][j]->x_rank = gsl_permutation_alloc(
+                        measure_matrix[i][j]->x->size);
+                gsl_permutation_memcpy(measure_matrix[i][j]->x_rank, ranks[i]);
+            }
+            if (ranks[j] == NULL) {
+                ranks[j] = dml_measure_y_rank(measure_matrix[i][j]);
+            } else {
+                measure_matrix[i][j]->y_rank = gsl_permutation_alloc(
+                        measure_matrix[i][j]->y->size);
+                gsl_permutation_memcpy(measure_matrix[i][j]->y_rank, ranks[j]);
+            }
         }
     }
+    g_free(ranks);
 
     // Select the order of the variables in the vine. The order of the variables
     // determines the structure of the first tree (and therefore the rest of
@@ -188,6 +208,7 @@ vine_fit_dvine(dml_vine_t *vine,
         v[0][i] = gsl_vector_alloc(m);
         gsl_matrix_get_col(v[0][i], data, vine->order[i-1]);
     }
+
     // Selection of the copulas in the first tree.
     tree_aic = 0;
     for (size_t i = 1; i <= n - 1; i++) {
@@ -202,6 +223,7 @@ vine_fit_dvine(dml_vine_t *vine,
             tree_aic += copula_aic;
         }
     }
+
     // Free the matrix with pairwise dependence measures.
     for (size_t i = 1; i < n; i++) {
         for (size_t j = 0; j < i; j++) {
@@ -211,6 +233,7 @@ vine_fit_dvine(dml_vine_t *vine,
     }
     g_free(measure_matrix);
     g_free(x_view);
+
     // Check if the vine should be truncated.
     if (trunc == DML_VINE_TRUNC_AIC && tree_aic >= 0) {
         // Undo the construction of the first tree, free memory and
