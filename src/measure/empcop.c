@@ -122,12 +122,12 @@ compute_empcop_cvm_stat(dml_measure_t *measure)
     gsl_sort_vector_index(perm, measure->x);
     gsl_permutation_inverse(rank, perm);
     for (size_t i = 0; i < n; i++) {
-        R[0 * n + i] = rank->data[i];
+        R[0 * n + i] = rank->data[i] + 1;
     }
     gsl_sort_vector_index(perm, measure->y);
     gsl_permutation_inverse(rank, perm);
     for (size_t i = 0; i < n; i++) {
-        R[1 * n + i] = rank->data[i];
+        R[1 * n + i] = rank->data[i] + 1;
     }
     gsl_permutation_free(perm);
     gsl_permutation_free(rank);
