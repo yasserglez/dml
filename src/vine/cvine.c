@@ -20,9 +20,7 @@
 
 static double
 cvine_calculate_weight(dml_vine_weight_t weight,
-                       dml_measure_t *measure,
-                       const gsl_vector *x,
-                       const gsl_vector *y)
+                       dml_measure_t *measure)
 {
     double value;
 
@@ -78,11 +76,12 @@ vine_fit_cvine(dml_vine_t *vine,
     igraph_integer_t root_vertex = -1; // Vertex id of the root of the tree.
     size_t root_index; // Variable index corresponding to the root of the tree.
     gsl_vector *xa, *xb; // Samples of 'a' and 'b', respectively.
-    dml_measure_t ***measure_matrix;
+    dml_measure_t *measure, ***measure_matrix;
     dml_copula_t *copula;
     double tree_weight, max_tree_weight;
     double tree_aic, copula_aic;
     gsl_vector_short *selected_roots;
+    gsl_permutation **ranks;
 
     igraph_i_set_attribute_table(&igraph_cattribute_table);
 
@@ -125,19 +124,35 @@ vine_fit_cvine(dml_vine_t *vine,
         }
 
         // Select the root node of the tree.
+        ranks = g_malloc0_n(n - k, sizeof(gsl_permutation *));
         max_tree_weight = GSL_NAN;
-        for (a = 0; a < igraph_vcount(trees[k]); a++) {
+        for (a = 0; a < n - k; a++) {
             xa = VAP(trees[k], "data", a);
             tree_weight = 0;
-            for (b = 0; b < igraph_vcount(trees[k]); b++) {
+            for (b = 0; b < n - k; b++) {
                 if (a != b) {
                     xb = VAP(trees[k], "data", b);
                     if (measure_matrix[(size_t) a][(size_t) b] == NULL) {
                         measure_matrix[(size_t) a][(size_t) b] = dml_measure_alloc(xa, xb);
-                        measure_matrix[(size_t) b][(size_t) a] = measure_matrix[(size_t) a][(size_t) b];
+                        measure = measure_matrix[(size_t) a][(size_t) b];
+                        measure_matrix[(size_t) b][(size_t) a] = measure;
+
+                        // Pre-calculate the ranks of the variables.
+                        if (ranks[(size_t) a] == NULL) {
+                            ranks[(size_t) a] = dml_measure_x_rank(measure);
+                        } else {
+                            measure->x_rank = gsl_permutation_alloc(measure->x->size);
+                            gsl_permutation_memcpy(measure->x_rank, ranks[(size_t) a]);
+                        }
+                        if (ranks[(size_t) b] == NULL) {
+                            ranks[(size_t) b] = dml_measure_y_rank(measure);
+                        } else {
+                            measure->y_rank = gsl_permutation_alloc(measure->y->size);
+                            gsl_permutation_memcpy(measure->y_rank, ranks[(size_t) b]);
+                        }
                     }
-                    tree_weight += cvine_calculate_weight(
-                            weight, measure_matrix[(size_t) a][(size_t) b], xa, xb);
+                    tree_weight += cvine_calculate_weight(weight,
+                            measure_matrix[(size_t) a][(size_t) b]);
                 }
             }
             if (gsl_isnan(max_tree_weight) || tree_weight > max_tree_weight) {
@@ -145,6 +160,8 @@ vine_fit_cvine(dml_vine_t *vine,
                 max_tree_weight = tree_weight;
             }
         }
+        g_free(ranks);
+
         // Update the order of the variables and add edges from the root
         // vertex to the other vertexes.
         root_index = VAN(trees[k], "index", root_vertex);
@@ -167,8 +184,7 @@ vine_fit_cvine(dml_vine_t *vine,
 
             copula = dml_copula_select(xa, xb,
                     measure_matrix[(size_t) a][(size_t) b], indeptest,
-                    indeptest_level, types, types_size, select, gof_level,
-                    rng);
+                    indeptest_level, types, types_size, select, gof_level, rng);
             SETEAP(trees[k], "copula", e, copula);
 
             // Get information for the truncation of the vine.
@@ -209,6 +225,7 @@ vine_fit_cvine(dml_vine_t *vine,
     if (k == n - 1) {
         cvine_tree_cleanup(trees[k - 1]);
     }
+
     // Set the number of trees and complete the vector with the order of the variables.
     vine->trees = k;
     for (size_t i = 0; i < n; i++) {
