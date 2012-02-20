@@ -25,7 +25,9 @@ rvine_set_weight(igraph_t *graph,
                  dml_vine_weight_t weight,
                  igraph_integer_t e,
                  const gsl_vector *x,
-                 const gsl_vector *y)
+                 const gsl_vector *y,
+                 const gsl_permutation *x_rank,
+                 const gsl_permutation *y_rank)
 {
     double value;
     dml_measure_t *measure;
@@ -33,6 +35,10 @@ rvine_set_weight(igraph_t *graph,
     // The weight is minimized.
 
     measure = dml_measure_alloc(x, y);
+    measure->x_rank = gsl_permutation_alloc(x_rank->size);
+    gsl_permutation_memcpy(measure->x_rank, x_rank);
+    measure->y_rank = gsl_permutation_alloc(y_rank->size);
+    gsl_permutation_memcpy(measure->y_rank, y_rank);
 
     switch (weight) {
     case DML_VINE_WEIGHT_TAU:
@@ -100,6 +106,7 @@ fit_rvine_trees(igraph_t **trees,
     size_t k;
     dml_measure_t *measure;
     double tree_aic, copula_aic;
+    gsl_permutation *perm, *rank, *xa_rank, *xb_rank;
 
     igraph_i_set_attribute_table(&igraph_cattribute_table);
 
@@ -107,6 +114,7 @@ fit_rvine_trees(igraph_t **trees,
     n = data->size2;
     graph = g_malloc(sizeof(igraph_t));
     graph_weight = g_malloc(sizeof(igraph_vector_t));
+    perm = gsl_permutation_alloc(m);
 
     for (k = 0; k < n - 1; k++) { // Tree index.
         if (k == 0) {
@@ -117,6 +125,10 @@ fit_rvine_trees(igraph_t **trees,
                 x = gsl_vector_alloc(m);
                 gsl_matrix_get_col(x, data, i);
                 SETVAP(graph, "data", i, x);
+                gsl_sort_vector_index(perm, x);
+                rank = gsl_permutation_alloc(m);
+                gsl_permutation_inverse(rank, perm);
+                SETVAP(graph, "rank", i, rank);
             }
 
             for (e = 0; e < igraph_ecount(graph); e++) {
@@ -125,7 +137,9 @@ fit_rvine_trees(igraph_t **trees,
                 // Calculate the weight of the edge.
                 xa = VAP(graph, "data", a);
                 xb = VAP(graph, "data", b);
-                rvine_set_weight(graph, weight, e, xa, xb);
+                xa_rank = VAP(graph, "rank", a);
+                xb_rank = VAP(graph, "rank", b);
+                rvine_set_weight(graph, weight, e, xa, xb, xa_rank, xb_rank);
 
                 // Variables "connected" by this edge.
                 Ue = gsl_vector_short_calloc(n);
@@ -150,6 +164,10 @@ fit_rvine_trees(igraph_t **trees,
                 dml_copula_h(copula, xa, xb, x);
                 // The edge id of a tree are the vertex id of the next tree.
                 SETVAP(graph, "data", e, x);
+                gsl_sort_vector_index(perm, x);
+                rank = gsl_permutation_alloc(m);
+                gsl_permutation_inverse(rank, perm);
+                SETVAP(graph, "rank", e, rank);
             }
 
             // Adding all the "possible" edges.
@@ -165,7 +183,9 @@ fit_rvine_trees(igraph_t **trees,
                         // Calculate the weight of the edge.
                         xa = VAP(graph, "data", a);
                         xb = VAP(graph, "data", b);
-                        rvine_set_weight(graph, weight, e, xa, xb);
+                        xa_rank = VAP(graph, "rank", a);
+                        xb_rank = VAP(graph, "rank", b);
+                        rvine_set_weight(graph, weight, e, xa, xb, xa_rank, xb_rank);
 
                         // Variables "connected" by this edge and conditioned set.
                         Ua = EAP(trees[k - 1], "Ue", a);
@@ -242,6 +262,7 @@ fit_rvine_trees(igraph_t **trees,
 
     g_free(graph_weight);
     g_free(graph);
+    gsl_permutation_free(perm);
 }
 
 // Compute an R-vine matrix from the trees. Based on Algorithm 3.2 of
