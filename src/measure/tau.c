@@ -9,6 +9,8 @@
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_cdf.h>
+#include <gsl/gsl_sort.h>
+#include <gsl/gsl_sort_vector.h>
 
 #include "src/dml.h"
 
@@ -17,6 +19,7 @@
 // of the algorithm presented in Knight, W. R. (1966). A computer method for
 // calculating Kendall's tau with ungrouped data. Journal of the American
 // Statistical Association 61, 436-439.
+
 static void
 compute_tau_coef(dml_measure_t *measure)
 {
@@ -26,45 +29,21 @@ compute_tau_coef(dml_measure_t *measure)
     bool i_flag, j_flag, x_flag;
     double score = 0, denom = 0;
     size_t t = 0, u = 0, v = 0;
+    gsl_permutation *x_rank;
 
     n = measure->x->size;
     x = g_malloc_n(n, sizeof(double));
     y = g_malloc_n(n, sizeof(double));
-    for (i = 0; i < n; i++) {
-        x[i] = gsl_vector_get(measure->x, i);
-        y[i] = gsl_vector_get(measure->y, i);
-    }
     x_aux = g_malloc_n(n, sizeof(double));
     y_aux = g_malloc_n(n, sizeof(double));
 
-    // 1.1. Sort x and y in x order.
-    k = 1;
-    do {
-        l = 0;
-        do {
-            i = l;
-            j = (i + k) < n ? (i + k) : n;
-            i_end = j;
-            j_end = (j + k) < n ? (j + k) : n;
-            do {
-                i_flag = (i < i_end);
-                j_flag = (j < j_end);
-                x_flag = ((x[i] > x[j]) | ((x[i] == x[j]) & (y[i] > y[j])));
-                if ((i_flag & !j_flag) | (i_flag & j_flag & !x_flag)) {
-                    x_aux[l] = x[i]; y_aux[l] = y[i];
-                    i++; l++;
-                }
-                if ((!i_flag & j_flag) | (i_flag & j_flag & x_flag)) {
-                    x_aux[l] = x[j]; y_aux[l] = y[j];
-                    j++; l++;
-                }
-            } while (i_flag | j_flag);
-        } while (l < n);
-
-        tmp = x; x = x_aux; x_aux = tmp;
-        tmp = y; y = y_aux; y_aux = tmp;
-        k *= 2;
-    } while (k < n);
+    // 1.1. Sort x and y in x order. This step differs with the original
+    // algorithm to reuse the ranks of the data if already computed.
+    x_rank = dml_measure_x_rank(measure);
+    for (i = 0; i < n; i++) {
+        x[x_rank->data[i]] = gsl_vector_get(measure->x, i);
+        y[x_rank->data[i]] = gsl_vector_get(measure->y, i);
+    }
 
     // 1.2. Count pairs of tied x's in t.
     j = 1;

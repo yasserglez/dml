@@ -3,6 +3,8 @@
 
 #include "config.h"
 
+#include <stdbool.h>
+
 #include <glib.h>
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_math.h>
@@ -595,6 +597,7 @@ static void
 copula_gof_normal(const dml_copula_t *copula,
                   const gsl_vector *u,
                   const gsl_vector *v,
+                  dml_measure_t *measure,
                   const gsl_rng *rng,
                   double *pvalue)
 {
@@ -605,8 +608,15 @@ copula_gof_normal(const dml_copula_t *copula,
     int stats_count = 100;
     double stat, *stats;
     gsl_vector *u_pseudo, *v_pseudo;
-    gsl_permutation *u_perm, *u_rank;
-    gsl_permutation *v_perm, *v_rank;
+    bool measure_dealloc;
+    gsl_permutation *u_rank, *v_rank;
+
+    if (measure == NULL) {
+        measure = dml_measure_alloc(u, v);
+        measure_dealloc = true;
+    } else {
+        measure_dealloc = false;
+    }
 
     params = copula->data;
     rho = params[0];
@@ -621,16 +631,10 @@ copula_gof_normal(const dml_copula_t *copula,
     Ctheta = g_malloc_n(n, sizeof(double));
     influ = g_malloc_n(n * n, sizeof(double));
     stats = g_malloc0_n(stats_count, sizeof(double));
-    u_perm = gsl_permutation_alloc(n);
-    u_rank = gsl_permutation_alloc(n);
-    v_perm = gsl_permutation_alloc(n);
-    v_rank = gsl_permutation_alloc(n);
 
     // Compute the ranks of the data.
-    gsl_sort_vector_index(u_perm, u);
-    gsl_permutation_inverse(u_rank, u_perm);
-    gsl_sort_vector_index(v_perm, v);
-    gsl_permutation_inverse(v_rank, v_perm);
+    u_rank = dml_measure_x_rank(measure);
+    v_rank = dml_measure_y_rank(measure);
     for (size_t i = 0; i < n; i++) {
         U[i + n*0] = (double) (u_rank->data[i] + 1.0) / (n + 1.0);
         gsl_vector_set(u_pseudo, i, U[i + n*0]);
@@ -670,10 +674,7 @@ copula_gof_normal(const dml_copula_t *copula,
     g_free(Ctheta);
     g_free(influ);
     g_free(stats);
-    gsl_permutation_free(u_perm);
-    gsl_permutation_free(u_rank);
-    gsl_permutation_free(v_perm);
-    gsl_permutation_free(v_rank);
+    if (measure_dealloc) dml_measure_free(measure);
 }
 
 static void

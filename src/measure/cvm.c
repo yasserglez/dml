@@ -106,7 +106,7 @@ compute_cvm_stat(dml_measure_t *measure)
 {
     size_t n;
     double *R, *J, *K, *L;
-    gsl_permutation *perm, *rank;
+    gsl_permutation *x_rank, *y_rank;
     double stat;
 
     n = measure->x->size;
@@ -115,22 +115,14 @@ compute_cvm_stat(dml_measure_t *measure)
     J = g_malloc0_n(n * n * 2, sizeof(double));
     K = g_malloc0_n(n * 2, sizeof(double));
     L = g_malloc0_n(2, sizeof(double));
-    perm = gsl_permutation_alloc(n);
-    rank = gsl_permutation_alloc(n);
 
     // Compute the ranks of the data.
-    gsl_sort_vector_index(perm, measure->x);
-    gsl_permutation_inverse(rank, perm);
+    x_rank = dml_measure_x_rank(measure);
+    y_rank = dml_measure_y_rank(measure);
     for (size_t i = 0; i < n; i++) {
-        R[0 * n + i] = rank->data[i] + 1;
+        R[0 * n + i] = x_rank->data[i] + 1;
+        R[1 * n + i] = y_rank->data[i] + 1;
     }
-    gsl_sort_vector_index(perm, measure->y);
-    gsl_permutation_inverse(rank, perm);
-    for (size_t i = 0; i < n; i++) {
-        R[1 * n + i] = rank->data[i] + 1;
-    }
-    gsl_permutation_free(perm);
-    gsl_permutation_free(rank);
 
     // Compute arrays J, K, L.
     J_u(n, 2, R, J);

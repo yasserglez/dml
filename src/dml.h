@@ -7,10 +7,14 @@
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_matrix.h>
+#include <gsl/gsl_sort.h>
+#include <gsl/gsl_sort_vector.h>
 
 typedef struct dml_measure_s {
     const gsl_vector *x; // Observations of the first variable.
     const gsl_vector *y; // Observations of the second variable.
+    gsl_permutation *x_rank; // Ranks of the first variable.
+    gsl_permutation *y_rank; // Ranks of the second variable.
     // Kendall's tau concordance measure.
     double tau_coef;
     double tau_pvalue;
@@ -74,6 +78,7 @@ typedef struct dml_copula_s {
     void (*gof)(const struct dml_copula_s *copula,
                 const gsl_vector *u,
                 const gsl_vector *v,
+                dml_measure_t *measure,
                 const gsl_rng *rng,
                 double *pvalue);
     void (*free)(struct dml_copula_s *copula);
@@ -128,6 +133,12 @@ typedef struct dml_vine_s {
 
 dml_measure_t *
 dml_measure_alloc(const gsl_vector *x, const gsl_vector *y);
+
+gsl_permutation *
+dml_measure_x_rank(dml_measure_t *measure);
+
+gsl_permutation *
+dml_measure_y_rank(dml_measure_t *measure);
 
 double
 dml_measure_tau_coef(dml_measure_t *measure);
@@ -227,6 +238,7 @@ void
 dml_copula_gof(const dml_copula_t *copula,
                const gsl_vector *u,
                const gsl_vector *v,
+               dml_measure_t *measure,
                const gsl_rng *rng,
                double *pvalue);
 

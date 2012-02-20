@@ -239,7 +239,7 @@ test_normal_gof_normal()
     copula = dml_copula_alloc_normal(0);
     measure = dml_measure_alloc(u, v);
     dml_copula_fit(copula, u, v, measure);
-    dml_copula_gof(copula, u, v, rng, &pvalue);
+    dml_copula_gof(copula, u, v, measure, rng, &pvalue);
     g_assert(pvalue > 0.01);
 
     dml_copula_free(copula);
@@ -272,7 +272,7 @@ test_normal_gof_clayton()
     copula = dml_copula_alloc_normal(0);
     measure = dml_measure_alloc(u, v);
     dml_copula_fit(copula, u, v, measure);
-    dml_copula_gof(copula, u, v, rng, &pvalue);
+    dml_copula_gof(copula, u, v, measure, rng, &pvalue);
     g_assert(pvalue < 0.01);
 
     dml_copula_free(copula);

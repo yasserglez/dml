@@ -47,7 +47,7 @@ rvine_set_weight(igraph_t *graph,
     }
 
     SETEAN(graph, "weight", e, value);
-    SETEAP(graph, "tau", e, measure);
+    SETEAP(graph, "measure", e, measure);
 }
 
 static inline void
@@ -67,12 +67,12 @@ rvine_tree_cleanup(igraph_t *tree)
     for (e = 0; e < igraph_ecount(tree); e++) {
         Ue = EAP(tree, "Ue", e);
         gsl_vector_short_free(Ue);
-        measure = EAP(tree, "tau", e);
+        measure = EAP(tree, "measure", e);
         if (measure != NULL) dml_measure_free(measure);
     }
     DELEA(tree, "Ue");
     DELEA(tree, "weight");
-    DELEA(tree, "tau");
+    DELEA(tree, "measure");
 }
 
 static void
@@ -202,7 +202,7 @@ fit_rvine_trees(igraph_t **trees,
             igraph_edge(trees[k], e, &a, &b);
             xa = VAP(trees[k], "data", a);
             xb = VAP(trees[k], "data", b);
-            measure = EAP(trees[k], "tau", e);
+            measure = EAP(trees[k], "measure", e);
 
             // Assign bivariate copulas to the edges.
             copula = dml_copula_select(xa, xb, measure, indeptest,
@@ -364,20 +364,20 @@ static void
 vine_fit_rvine(dml_vine_t *vine,
                const gsl_matrix *data,
                const dml_vine_weight_t weight,
-               const dml_vine_trunc_t truncation,
+               const dml_vine_trunc_t trunc,
                const dml_copula_indeptest_t indeptest,
                const double indeptest_level,
                const dml_copula_type_t *types,
                const size_t types_size,
-               const dml_copula_select_t selection,
+               const dml_copula_select_t select,
                const double gof_level,
                const gsl_rng *rng)
 {
     igraph_t **trees;
 
     trees = g_malloc0_n(data->size2 - 1, sizeof(igraph_t *));
-    fit_rvine_trees(trees, data, weight, truncation, indeptest, indeptest_level,
-                    types, types_size, selection, gof_level, rng);
+    fit_rvine_trees(trees, data, weight, trunc, indeptest, indeptest_level,
+                    types, types_size, select, gof_level, rng);
     rvine_trees_to_vine(vine, trees);
 
     for (size_t i = 0; i < data->size2 - 1; i++) {
