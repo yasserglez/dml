@@ -8,6 +8,8 @@
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_randist.h>
 #include <gsl/gsl_cdf.h>
+#include <gsl/gsl_sort.h>
+#include <gsl/gsl_sort_vector.h>
 
 #include "src/dml.h"
 
@@ -267,7 +269,8 @@ empcop(int n, int p, double *U, double *V, int m, int k)
 }
 
 static void
-cramer_vonMises_2(double *U,
+cramer_vonMises_2(int *p,
+                  double *U,
                   int *n,
                   double *V,
                   int *m,
@@ -278,11 +281,132 @@ cramer_vonMises_2(double *U,
     double s = 0.0, diff;
 
     for (i = 0; i < *m; i++) {
-        diff = empcop(*n, 2, U, V, *m, i) - Ctheta[i];
+        diff = empcop(*n, *p, U, V, *m, i) - Ctheta[i];
         s += diff * diff;
     }
 
     *stat = s * (*n) / (*m);
+}
+
+static double
+ecopula(double *U, int n, int p, double *u)
+{
+    int i, j;
+    double ind, res = 0.0;
+
+    for (i = 0; i < n; i++) {
+        ind = 1.0;
+        for (j = 0; j < p; j++)
+            ind *= (U[i + n * j] <= u[j]);
+        res += ind;
+    }
+    return res / n;
+}
+
+static double
+derecopula(double *U, int n, int p, double *u, double *v)
+{
+    return (ecopula(U, n, p, u) - ecopula(U, n, p, v)) * sqrt(n) / 2.0;
+}
+
+static void
+multiplier(int *p,
+           double *u0,
+           int *m,
+           double *u,
+           int *n,
+           double *influ,
+           int *N,
+           double *s0,
+           const gsl_rng *rng)
+{
+    int i, j, k, l, ind;
+    double *influ_mat = g_malloc0_n((*m) * (*n), sizeof(double));
+    double *random = g_malloc0_n(*m, sizeof(double));
+    double *v1 = g_malloc0_n(*p, sizeof(double));
+    double *v2 = g_malloc0_n(*p, sizeof(double));
+    double *der = g_malloc0_n(*p, sizeof(double));
+    double mean, process, invsqrtm = 1.0 / sqrt(*m);
+
+    /* influence matrix */
+    for (j = 0; j < *n; j++) /* loop over the grid points */
+    {
+        /* derivatives wrt args */
+        for (k = 0; k < *p; k++) {
+            v1[k] = u[j + k * (*n)];
+            v2[k] = v1[k];
+        }
+        for (k = 0; k < *p; k++) {
+            v1[k] += invsqrtm;
+            v2[k] -= invsqrtm;
+            der[k] = derecopula(u0, *m, *p, v1, v2);
+            v1[k] -= invsqrtm;
+            v2[k] += invsqrtm;
+        }
+
+        for (i = 0; i < *m; i++) /* loop over the data */
+        {
+            influ_mat[i + j * (*m)] = 0.0;
+            ind = 1;
+            for (k = 0; k < *p; k++) {
+                ind *= (u0[i + k * (*m)] <= u[j + k * (*n)]);
+                influ_mat[i + j * (*m)] -= der[k]
+                        * (u0[i + k * (*m)] <= u[j + k * (*n)]);
+            }
+            influ_mat[i + j * (*m)] += ind; /* - influ[j + i * (*n)];*/
+            influ[j + i * (*n)] *= invsqrtm;
+            influ_mat[i + j * (*m)] *= invsqrtm;
+        }
+    }
+
+    /* generate N approximate realizations */
+    for (l = 0; l < *N; l++) {
+        /* generate m variates */
+        mean = 0.0;
+        for (i = 0; i < *m; i++) {
+            random[i] = gsl_ran_ugaussian(rng);
+            mean += random[i];
+        }
+        mean /= *m;
+
+        /* realization number l */
+        s0[l] = 0.0;
+        for (j = 0; j < *n; j++) {
+            process = 0.0;
+            for (i = 0; i < *m; i++)
+                process += (random[i] - mean) * influ_mat[i + j * (*m)]
+                        - random[i] * influ[j + i * (*n)];
+            s0[l] += process * process;
+        }
+        s0[l] /= *n;
+    }
+
+    g_free(influ_mat);
+    g_free(random);
+    g_free(v1);
+    g_free(v2);
+    g_free(der);
+}
+
+// Based on the derCdfWrtParams R function from the copula R pacakge.
+
+static void
+derCdfWrtParams(double rho,
+                const gsl_vector *u,
+                const gsl_vector *v,
+                gsl_vector *der)
+{
+    double xi, yi, deri;
+
+    for (size_t i = 0; i < u->size; i++) {
+        // v <- qnorm(u)
+        xi = gsl_cdf_ugaussian_Pinv(gsl_vector_get(u, i));
+        yi = gsl_cdf_ugaussian_Pinv(gsl_vector_get(v, i));
+        // plackettFormulaDim2
+        deri = exp(-(xi*xi + yi*yi - 2*rho*xi*yi) / (2 * (1 - rho*rho)))
+                / (2 * M_PI * sqrt(1 - rho*rho));
+        gsl_vector_set(der, i, deri);
+    }
 }
 
 static void
@@ -471,31 +595,85 @@ static void
 copula_gof_normal(const dml_copula_t *copula,
                   const gsl_vector *u,
                   const gsl_vector *v,
-                  double *pvalue)
+                  double *pvalue,
+                  const gsl_rng *rng)
 {
-    int n;
-    gsl_vector *cdf;
-    double stat;
-    double *U, *Ctheta;
+    int n, k, count, p = 2;
+    gsl_vector *cdf, *der;
+    double *params, rho, tau;
+    double *U, *Ctheta, *influ;
+    int stats_count = 100;
+    double stat, *stats;
+    gsl_vector *u_pseudo, *v_pseudo;
+    gsl_permutation *u_perm, *u_rank;
+    gsl_permutation *v_perm, *v_rank;
+
+    params = copula->data;
+    rho = params[0];
+    tau = 2 * asin(rho) / M_PI;
 
     n = (int) u->size;
+    u_pseudo = gsl_vector_alloc(n);
+    v_pseudo = gsl_vector_alloc(n);
     cdf = gsl_vector_alloc(n);
+    der = gsl_vector_alloc(n);
     U = g_malloc_n(2 * n, sizeof(double));
     Ctheta = g_malloc_n(n, sizeof(double));
+    influ = g_malloc_n(n * n, sizeof(double));
+    stats = g_malloc0_n(stats_count, sizeof(double));
+    u_perm = gsl_permutation_alloc(n);
+    u_rank = gsl_permutation_alloc(n);
+    v_perm = gsl_permutation_alloc(n);
+    v_rank = gsl_permutation_alloc(n);
 
-    dml_copula_cdf(copula, u, v, cdf);
+    // Compute the ranks of the data.
+    gsl_sort_vector_index(u_perm, u);
+    gsl_permutation_inverse(u_rank, u_perm);
+    gsl_sort_vector_index(v_perm, v);
+    gsl_permutation_inverse(v_rank, v_perm);
     for (size_t i = 0; i < n; i++) {
-        U[i + n * 0] = gsl_vector_get(u, i);
-        U[i + n * 1] = gsl_vector_get(v, i);
+        U[i + n*0] = (double) (u_rank->data[i] + 1.0) / (n + 1.0);
+        gsl_vector_set(u_pseudo, i, U[i + n*0]);
+        U[i + n*1] = (double) (v_rank->data[i] + 1.0) / (n + 1.0);
+        gsl_vector_set(v_pseudo, i, U[i + n*1]);
+    }
+
+    dml_copula_cdf(copula, u_pseudo, v_pseudo, cdf);
+    for (size_t i = 0; i < n; i++) {
         Ctheta[i] = gsl_vector_get(cdf, i);
     }
-    cramer_vonMises_2(U, &n, U, &n, Ctheta, &stat);
 
-    *pvalue = stat;
+    cramer_vonMises_2(&p, U, &n, U, &n, Ctheta, &stat);
+
+    derCdfWrtParams(rho, u_pseudo, v_pseudo, der);
+    for (size_t i = 0; i < n; i++) {
+        for (size_t j = 0; j < n; j++) {
+            influ[j + i * n] = gsl_vector_get(der, i) * 4.0
+                    * (2.0 * Ctheta[j] - U[j + n*0] - U[j + n*1] + (1.0 - tau) / 2.0)
+                    / (2.0 / (M_PI * sqrt(1 - rho*rho)));
+        }
+    }
+    multiplier(&p, U, &n, U, &n, influ, &stats_count, stats, rng);
+
+    count = 0;
+    for (k = 0; k < stats_count; k++) {
+        if (stats[k] >= stat)
+            count++;
+    }
+    *pvalue = (double) (count + 0.5) / (stats_count + 1.0);
 
     gsl_vector_free(cdf);
+    gsl_vector_free(u_pseudo);
+    gsl_vector_free(v_pseudo);
+    gsl_vector_free(der);
     g_free(U);
     g_free(Ctheta);
+    g_free(influ);
+    g_free(stats);
+    gsl_permutation_free(u_perm);
+    gsl_permutation_free(u_rank);
+    gsl_permutation_free(v_perm);
+    gsl_permutation_free(v_rank);
 }
 
 static void

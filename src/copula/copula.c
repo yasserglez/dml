@@ -125,9 +125,10 @@ inline void
 dml_copula_gof(const dml_copula_t *copula,
                const gsl_vector *u,
                const gsl_vector *v,
-               double *pvalue)
+               double *pvalue,
+               const gsl_rng *rng)
 {
-    copula->gof(copula, u, v, pvalue);
+    copula->gof(copula, u, v, pvalue, rng);
 }
 
 inline void

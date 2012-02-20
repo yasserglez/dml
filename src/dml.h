@@ -70,7 +70,8 @@ typedef struct dml_copula_s {
     void (*gof)(const struct dml_copula_s *copula,
                 const gsl_vector *u,
                 const gsl_vector *v,
-                double *pvalue);
+                double *pvalue,
+                const gsl_rng *rng);
     void (*free)(struct dml_copula_s *copula);
 } dml_copula_t;
 
@@ -220,7 +221,8 @@ void
 dml_copula_gof(const dml_copula_t *copula,
                const gsl_vector *u,
                const gsl_vector *v,
-               double *pvalue);
+               double *pvalue,
+               const gsl_rng *rng);
 
 void
 dml_copula_free(dml_copula_t *copula);

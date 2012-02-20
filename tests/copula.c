@@ -217,12 +217,13 @@ TEST_DML_COPULA_FUNC_P(rclayton270, h, clayton_theta_negative, 20)
 TEST_DML_COPULA_FUNC_P(rclayton270, hinv, clayton_theta_negative, 20)
 
 void
-test_normal_gof()
+test_normal_gof_normal()
 {
     size_t n = 500;
     gsl_rng *rng;
     gsl_vector *u, *v;
     dml_copula_t *copula;
+    dml_measure_t *measure;
     double pvalue;
 
     rng = gsl_rng_alloc(gsl_rng_taus);
@@ -233,10 +234,49 @@ test_normal_gof()
 
     copula = dml_copula_alloc_normal(0.75);
     dml_copula_ran(copula, rng, u, v);
-    dml_copula_gof(copula, u, v, &pvalue);
-    printf("%f\n", pvalue);
+    dml_copula_free(copula);
+
+    copula = dml_copula_alloc_normal(0);
+    measure = dml_measure_alloc(u, v);
+    dml_copula_fit(copula, u, v, measure);
+    dml_copula_gof(copula, u, v, &pvalue, rng);
+    g_assert(pvalue > 0.01);
 
     dml_copula_free(copula);
+    dml_measure_free(measure);
+    gsl_vector_free(u);
+    gsl_vector_free(v);
+    gsl_rng_free(rng);
+}
+
+void
+test_normal_gof_clayton()
+{
+    size_t n = 500;
+    gsl_rng *rng;
+    gsl_vector *u, *v;
+    dml_copula_t *copula;
+    dml_measure_t *measure;
+    double pvalue;
+
+    rng = gsl_rng_alloc(gsl_rng_taus);
+    gsl_rng_set(rng, g_test_rand_int());
+
+    u = gsl_vector_alloc(n);
+    v = gsl_vector_alloc(n);
+
+    copula = dml_copula_alloc_clayton(10);
+    dml_copula_ran(copula, rng, u, v);
+    dml_copula_free(copula);
+
+    copula = dml_copula_alloc_normal(0);
+    measure = dml_measure_alloc(u, v);
+    dml_copula_fit(copula, u, v, measure);
+    dml_copula_gof(copula, u, v, &pvalue, rng);
+    g_assert(pvalue < 0.01);
+
+    dml_copula_free(copula);
+    dml_measure_free(measure);
     gsl_vector_free(u);
     gsl_vector_free(v);
     gsl_rng_free(rng);

@@ -19,6 +19,7 @@ test_measure_alloc()
 // Genest, C. and Favre, A. C. (2007) Everything you always want to known
 // about copula modeling but were afraid to ask. Journal of Hydrologic
 // Engineering, 12, 347-68.
+
 void
 test_measure_tau_small()
 {
