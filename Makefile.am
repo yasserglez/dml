@@ -23,7 +23,7 @@ libdml_la_SOURCES = \
     src/copula/indep.c \
     src/copula/normal.c \
     src/copula/clayton.c \
-    src/copula/selection.c \
+    src/copula/select.c \
     src/vine/vine.c \
     src/vine/cvine.c \
     src/vine/dvine.c \

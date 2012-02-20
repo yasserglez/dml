@@ -21,6 +21,8 @@ typedef struct dml_measure_s {
 
 typedef enum dml_copula_selection_e {
     DML_COPULA_SELECTION_AIC, // Akaike Information Criterion.
+    DML_COPULA_SELECTION_GOF, // Goodness-of-fit test based on
+                              // a Cramer-von Mises statistic.
 } dml_copula_selection_t;
 
 typedef enum dml_copula_indeptest_e {
