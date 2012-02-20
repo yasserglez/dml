@@ -18,7 +18,7 @@ dml_copula_select(const gsl_vector *u,
                   const double indeptest_level,
                   const dml_copula_type_t *types,
                   const size_t types_size,
-                  const dml_copula_selection_t selection,
+                  const dml_copula_select_t select,
                   const double gof_level,
                   const gsl_rng *rng)
 {
@@ -40,7 +40,7 @@ dml_copula_select(const gsl_vector *u,
     if (indeptest == DML_COPULA_INDEPTEST_TAU) {
         indeptest_pvalue = dml_measure_tau_pvalue(measure);
     } else if (indeptest == DML_COPULA_INDEPTEST_CVM) {
-        indeptest_pvalue = dml_measure_empcop_cvm_pvalue(measure, rng);
+        indeptest_pvalue = dml_measure_cvm_pvalue(measure, rng);
     }
     if (indeptest_pvalue >= indeptest_level) {
         // The null hypothesis was not rejected.
@@ -53,8 +53,8 @@ dml_copula_select(const gsl_vector *u,
             selected = dml_copula_alloc(types[0]);
             dml_copula_fit(selected, u, v, measure);
 
-            if (selection == DML_COPULA_SELECTION_GOF) {
-                dml_copula_gof(selected, u, v, &selected_fit, rng);
+            if (select == DML_COPULA_SELECT_GOF) {
+                dml_copula_gof(selected, u, v, rng, &selected_fit);
                 if (selected_fit < gof_level) {
                     dml_copula_free(selected);
                     selected = NULL;
@@ -78,8 +78,8 @@ dml_copula_select(const gsl_vector *u,
                 candidate = dml_copula_alloc(types[t]);
                 dml_copula_fit(candidate, u, v, measure);
 
-                switch (selection) {
-                case DML_COPULA_SELECTION_AIC:
+                switch (select) {
+                case DML_COPULA_SELECT_AIC:
                     dml_copula_aic(candidate, u, v, &candidate_fit);
                     if (selected == NULL) {
                         selected = candidate;
@@ -92,8 +92,8 @@ dml_copula_select(const gsl_vector *u,
                         dml_copula_free(candidate);
                     }
                     break;
-                case DML_COPULA_SELECTION_GOF:
-                    dml_copula_gof(candidate, u, v, &candidate_fit, rng);
+                case DML_COPULA_SELECT_GOF:
+                    dml_copula_gof(candidate, u, v, rng, &candidate_fit);
                     if (candidate_fit >= gof_level) {
                         // The candidate copula was not rejected.
                         if (selected == NULL) {

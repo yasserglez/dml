@@ -595,8 +595,8 @@ static void
 copula_gof_normal(const dml_copula_t *copula,
                   const gsl_vector *u,
                   const gsl_vector *v,
-                  double *pvalue,
-                  const gsl_rng *rng)
+                  const gsl_rng *rng,
+                  double *pvalue)
 {
     int n, k, count, p = 2;
     gsl_vector *cdf, *der;

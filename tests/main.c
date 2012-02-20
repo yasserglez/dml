@@ -13,8 +13,8 @@ main(int argc, char **argv)
     g_test_add_func("/measure/alloc", test_measure_alloc);
     g_test_add_func("/measure/tau/small", test_measure_tau_small);
     g_test_add_func("/measure/tau/large", test_measure_tau_large);
-    g_test_add_func("/measure/empcop_cvm/normal", test_measure_empcop_cvm_normal);
-    g_test_add_func("/measure/empcop_cvm/indep", test_measure_empcop_cvm_indep);
+    g_test_add_func("/measure/cvm/normal", test_measure_cvm_normal);
+    g_test_add_func("/measure/cvm/indep", test_measure_cvm_indep);
 
     g_test_add_func("/copula/indep/alloc", test_indep_alloc);
     g_test_add_func("/copula/indep/fit", test_indep_fit);

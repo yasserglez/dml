@@ -12,6 +12,7 @@
 #include "src/dml.h"
 
 // Macros to save pointers in the numeric attributes of igraph. Portability?
+
 #define VAP(graph, n, v) ((void *) (long) (igraph_cattribute_VAN((graph), (n), (v))))
 #define EAP(graph, n, e) ((void *) (long) (igraph_cattribute_EAN((graph), (n), (e))))
 #define SETVAP(graph, n, vid, value) (igraph_cattribute_VAN_set((graph),(n),(vid),((double) (long) (value))))
@@ -32,7 +33,7 @@ cvine_calculate_weight(dml_vine_weight_t weight,
         value = fabs(dml_measure_tau_coef(measure));
         break;
     case DML_VINE_WEIGHT_CVM:
-        value = dml_measure_empcop_cvm_stat(measure);
+        value = dml_measure_cvm_stat(measure);
         break;
     default:
         value = 0;
@@ -58,13 +59,14 @@ cvine_tree_cleanup(igraph_t *tree)
 static void
 vine_fit_cvine(dml_vine_t *vine,
                const gsl_matrix *data,
-               dml_vine_weight_t weight,
-               dml_vine_truncation_t truncation,
-               dml_copula_indeptest_t indeptest,
-               double indeptest_level,
+               const dml_vine_weight_t weight,
+               const dml_vine_trunc_t trunc,
+               const dml_copula_indeptest_t indeptest,
+               const double indeptest_level,
                const dml_copula_type_t *types,
-               size_t types_size,
-               dml_copula_selection_t selection,
+               const size_t types_size,
+               const dml_copula_select_t select,
+               const double gof_level,
                const gsl_rng *rng)
 {
     size_t m, n;
@@ -163,13 +165,14 @@ vine_fit_cvine(dml_vine_t *vine,
             xa = VAP(trees[k], "data", a);
             xb = VAP(trees[k], "data", b);
 
-            copula = dml_copula_select(xa, xb, measure_matrix[(size_t) a][(size_t) b],
-                                       indeptest, indeptest_level, types,
-                                       types_size, selection, 0, rng);
+            copula = dml_copula_select(xa, xb,
+                    measure_matrix[(size_t) a][(size_t) b], indeptest,
+                    indeptest_level, types, types_size, select, gof_level,
+                    rng);
             SETEAP(trees[k], "copula", e, copula);
 
             // Get information for the truncation of the vine.
-            if (truncation == DML_VINE_TRUNCATION_AIC) {
+            if (trunc == DML_VINE_TRUNC_AIC) {
                 dml_copula_aic(copula, xa, xb, &copula_aic);
                 tree_aic += copula_aic;
             }
@@ -187,7 +190,7 @@ vine_fit_cvine(dml_vine_t *vine,
         g_free(measure_matrix);
 
         // Check if the vine should be truncated.
-        if (truncation == DML_VINE_TRUNCATION_AIC && tree_aic >= 0) {
+        if (trunc == DML_VINE_TRUNC_AIC && tree_aic >= 0) {
             // Undo the construction of the last tree.
             gsl_vector_short_set(selected_roots, root_index, 0);
             cvine_tree_cleanup(trees[k]);
@@ -235,6 +238,7 @@ vine_fit_cvine(dml_vine_t *vine,
 // Based on Algorithm 1 of Aas, K. and Czado, C. and Frigessi, A. and Bakken, H.
 // Pair-Copula Constructions of Multiple Dependence. Insurance: Mathematics
 // and Economics, 2009, Vol. 44, pp. 182-198.
+
 static void
 vine_ran_cvine(const dml_vine_t *vine,
                const gsl_rng *rng,
@@ -245,7 +249,7 @@ vine_ran_cvine(const dml_vine_t *vine,
     gsl_vector *w;
     gsl_vector *x, *y, *r;
 
-    n = vine->dimension;
+    n = vine->dim;
     v = gsl_matrix_alloc(n, n);
     w = gsl_vector_alloc(n);
     x = gsl_vector_alloc(1);
@@ -292,8 +296,8 @@ vine_free_cvine(dml_vine_t *vine)
 {
     g_free(vine->order);
     if (vine->copulas != NULL) {
-        for (size_t i = 0; i < vine->dimension - 1; i++) {
-            for (size_t j = 0; j < vine->dimension - 1 - i; j++) {
+        for (size_t i = 0; i < vine->dim - 1; i++) {
+            for (size_t j = 0; j < vine->dim - 1 - i; j++) {
                 if (vine->copulas[i][j] != NULL) {
                     dml_copula_free(vine->copulas[i][j]);
                 }
@@ -305,21 +309,20 @@ vine_free_cvine(dml_vine_t *vine)
 }
 
 dml_vine_t *
-dml_vine_alloc_cvine(const size_t dimension)
+dml_vine_alloc_cvine(const size_t dim)
 {
     dml_vine_t *vine;
 
     vine = g_malloc(sizeof(dml_vine_t));
     vine->type = DML_VINE_CVINE;
-    vine->dimension = dimension;
+    vine->dim = dim;
     vine->trees = 0;
-    vine->order = g_malloc_n(dimension, sizeof(size_t));
+    vine->order = g_malloc_n(dim, sizeof(size_t));
     vine->matrix = NULL; // Not used. C-vine represented by the order of the variables.
     // Upper triangular matrix with the parameters of the copulas.
-    vine->copulas = g_malloc_n(dimension - 1, sizeof(dml_copula_t **));
-    for (size_t i = 0; i < dimension - 1; i++) {
-        vine->copulas[i] = g_malloc0_n(dimension - 1 - i,
-                                       sizeof(dml_copula_t *));
+    vine->copulas = g_malloc_n(dim - 1, sizeof(dml_copula_t **));
+    for (size_t i = 0; i < dim - 1; i++) {
+        vine->copulas[i] = g_malloc0_n(dim - 1 - i, sizeof(dml_copula_t *));
     }
     vine->fit = vine_fit_cvine;
     vine->ran = vine_ran_cvine;

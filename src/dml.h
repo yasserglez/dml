@@ -11,25 +11,27 @@
 typedef struct dml_measure_s {
     const gsl_vector *x; // Observations of the first variable.
     const gsl_vector *y; // Observations of the second variable.
-    // Kendall's tau.
+    // Kendall's tau concordance measure.
     double tau_coef;
     double tau_pvalue;
-    // Empirical copula (independence test based on a Cramer-von Mises statistic).
-    double empcop_cvm_stat;
-    double empcop_cvm_pvalue;
+    // Independence test based on a Cramer-von Mises statistic between
+    // the empirical copula and the product copula.
+    double cvm_stat;
+    double cvm_pvalue;
 } dml_measure_t;
 
 typedef enum dml_copula_selection_e {
-    DML_COPULA_SELECTION_AIC, // Akaike Information Criterion.
-    DML_COPULA_SELECTION_GOF, // Goodness-of-fit test based on
-                              // a Cramer-von Mises statistic.
-} dml_copula_selection_t;
+    DML_COPULA_SELECT_AIC, // Akaike Information Criterion.
+    DML_COPULA_SELECT_GOF, // Goodness-of-fit test based on a Cramer-von Mises
+                           // statistic between the empirical copula and the
+                           // hypothesized copula.
+} dml_copula_select_t;
 
 typedef enum dml_copula_indeptest_e {
     DML_COPULA_INDEPTEST_NONE, // Disabled.
-    DML_COPULA_INDEPTEST_TAU, // Test based on Kendall's tau.
-    DML_COPULA_INDEPTEST_CVM, // Cramer-von Mises statistic based on the
-                              // empirical copula and the product copula.
+    DML_COPULA_INDEPTEST_TAU, // Based on Kendall's tau.
+    DML_COPULA_INDEPTEST_CVM, // Based on a Cramer-von Mises statistic between
+                              // the empirical copula and the product copula.
 } dml_copula_indeptest_t;
 
 typedef enum dml_copula_type_e {
@@ -72,22 +74,23 @@ typedef struct dml_copula_s {
     void (*gof)(const struct dml_copula_s *copula,
                 const gsl_vector *u,
                 const gsl_vector *v,
-                double *pvalue,
-                const gsl_rng *rng);
+                const gsl_rng *rng,
+                double *pvalue);
     void (*free)(struct dml_copula_s *copula);
 } dml_copula_t;
 
 
 typedef enum dml_vine_weight_e {
     DML_VINE_WEIGHT_TAU, // Absolute value of Kendall's tau.
-    DML_VINE_WEIGHT_CVM, // Cramer-von Mises statistic based on the
-                         // empirical copula and the product copula.
+    DML_VINE_WEIGHT_CVM, // Statistic of the independence test based on a
+                         // Cramer-von Mises statistic between the empirical
+                         // copula and the product copula.
 } dml_vine_weight_t;
 
-typedef enum dml_vine_truncation_e {
-    DML_VINE_TRUNCATION_NONE, // Disabled.
-    DML_VINE_TRUNCATION_AIC, // Akaike Information Criterion.
-} dml_vine_truncation_t;
+typedef enum dml_vine_trunc_e {
+    DML_VINE_TRUNC_NONE, // Disabled.
+    DML_VINE_TRUNC_AIC, // Akaike Information Criterion.
+} dml_vine_trunc_t;
 
 typedef enum dml_vine_type_e {
     DML_VINE_CVINE, // Canonical vine.
@@ -97,7 +100,7 @@ typedef enum dml_vine_type_e {
 
 typedef struct dml_vine_s {
     dml_vine_type_t type;
-    size_t dimension;
+    size_t dim;
     size_t trees;
     size_t *order; // order[i] = j means that the variable i-th variable of the vine
                    // represents the j-th variable. Both i and j are zero-based.
@@ -107,12 +110,13 @@ typedef struct dml_vine_s {
     void (*fit)(struct dml_vine_s *vine,
                 const gsl_matrix *data,
                 const dml_vine_weight_t weight,
-                const dml_vine_truncation_t truncation,
+                const dml_vine_trunc_t trunc,
                 const dml_copula_indeptest_t indeptest,
                 const double indeptest_level,
                 const dml_copula_type_t *types,
                 const size_t types_size,
-                const dml_copula_selection_t selection,
+                const dml_copula_select_t select,
+                const double gof_level,
                 const gsl_rng *rng);
     void (*ran)(const struct dml_vine_s *vine,
                 const gsl_rng *rng,
@@ -132,10 +136,10 @@ double
 dml_measure_tau_pvalue(dml_measure_t *measure);
 
 double
-dml_measure_empcop_cvm_stat(dml_measure_t *measure);
+dml_measure_cvm_stat(dml_measure_t *measure);
 
 double
-dml_measure_empcop_cvm_pvalue(dml_measure_t *measure, const gsl_rng *rng);
+dml_measure_cvm_pvalue(dml_measure_t *measure, const gsl_rng *rng);
 
 void
 dml_measure_free(dml_measure_t *measure);
@@ -173,7 +177,7 @@ dml_copula_select(const gsl_vector *u,
                   const double indeptest_level,
                   const dml_copula_type_t *types,
                   const size_t types_size,
-                  const dml_copula_selection_t selection,
+                  const dml_copula_select_t select,
                   const double gof_level,
                   const gsl_rng *rng);
 
@@ -223,24 +227,24 @@ void
 dml_copula_gof(const dml_copula_t *copula,
                const gsl_vector *u,
                const gsl_vector *v,
-               double *pvalue,
-               const gsl_rng *rng);
+               const gsl_rng *rng,
+               double *pvalue);
 
 void
 dml_copula_free(dml_copula_t *copula);
 
 
 dml_vine_t *
-dml_vine_alloc(const dml_vine_type_t type, const size_t dimension);
+dml_vine_alloc(const dml_vine_type_t type, const size_t dim);
 
 dml_vine_t *
-dml_vine_alloc_cvine(const size_t dimension);
+dml_vine_alloc_cvine(const size_t dim);
 
 dml_vine_t *
-dml_vine_alloc_dvine(const size_t dimension);
+dml_vine_alloc_dvine(const size_t dim);
 
 dml_vine_t *
-dml_vine_alloc_rvine(const size_t dimension);
+dml_vine_alloc_rvine(const size_t dim);
 
 dml_vine_type_t
 dml_vine_type(const dml_vine_t *vine);
@@ -249,12 +253,13 @@ void
 dml_vine_fit(dml_vine_t *vine,
              const gsl_matrix *data,
              const dml_vine_weight_t weight,
-             const dml_vine_truncation_t truncation,
+             const dml_vine_trunc_t trunc,
              const dml_copula_indeptest_t indeptest,
              const double indeptest_level,
              const dml_copula_type_t *types,
              const size_t types_size,
-             const dml_copula_selection_t selection,
+             const dml_copula_select_t select,
+             const double gof_level,
              const gsl_rng *rng);
 
 void

@@ -18,7 +18,7 @@ TESTS = test
 libdml_la_SOURCES = \
     src/measure/measure.c \
     src/measure/tau.c \
-    src/measure/empcop.c \
+    src/measure/cvm.c \
     src/copula/copula.c \
     src/copula/indep.c \
     src/copula/normal.c \

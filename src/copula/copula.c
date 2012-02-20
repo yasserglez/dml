@@ -121,14 +121,14 @@ dml_copula_aic(const dml_copula_t *copula,
     copula->aic(copula, u, v, aic);
 }
 
-inline void
+void
 dml_copula_gof(const dml_copula_t *copula,
                const gsl_vector *u,
                const gsl_vector *v,
-               double *pvalue,
-               const gsl_rng *rng)
+               const gsl_rng *rng,
+               double *pvalue)
 {
-    copula->gof(copula, u, v, pvalue, rng);
+    copula->gof(copula, u, v, rng, pvalue);
 }
 
 inline void

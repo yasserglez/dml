@@ -14,6 +14,7 @@
 #include "src/dml.h"
 
 // Macros to save pointers in the numeric attributes of igraph. Portability?
+
 #define VAP(graph, n, v) ((void *) (long) (igraph_cattribute_VAN((graph), (n), (v))))
 #define EAP(graph, n, e) ((void *) (long) (igraph_cattribute_EAN((graph), (n), (e))))
 #define SETVAP(graph, n, vid, value) (igraph_cattribute_VAN_set((graph),(n),(vid),((double) (long) (value))))
@@ -38,7 +39,7 @@ rvine_set_weight(igraph_t *graph,
         value = 1 - fabs(dml_measure_tau_coef(measure));
         break;
     case DML_VINE_WEIGHT_CVM:
-        value = measure->x->size - dml_measure_empcop_cvm_stat(measure);
+        value = measure->x->size - dml_measure_cvm_stat(measure);
         break;
     default:
         value = 0;
@@ -77,13 +78,14 @@ rvine_tree_cleanup(igraph_t *tree)
 static void
 fit_rvine_trees(igraph_t **trees,
                 const gsl_matrix *data,
-                dml_vine_weight_t weight,
-                dml_vine_truncation_t truncation,
-                dml_copula_indeptest_t indeptest,
-                double indeptest_level,
+                const dml_vine_weight_t weight,
+                const dml_vine_trunc_t trunc,
+                const dml_copula_indeptest_t indeptest,
+                const double indeptest_level,
                 const dml_copula_type_t *types,
-                size_t types_size,
-                dml_copula_selection_t selection,
+                const size_t types_size,
+                const dml_copula_select_t select,
+                const double gof_level,
                 const gsl_rng *rng)
 {
     size_t m, n;
@@ -205,11 +207,11 @@ fit_rvine_trees(igraph_t **trees,
             // Assign bivariate copulas to the edges.
             copula = dml_copula_select(xa, xb, measure, indeptest,
                                        indeptest_level, types, types_size,
-                                       selection, 0, rng);
+                                       select, gof_level, rng);
             SETEAP(trees[k], "copula", e, copula);
 
             // Get information for the truncation of the vine.
-            if (truncation == DML_VINE_TRUNCATION_AIC) {
+            if (trunc == DML_VINE_TRUNC_AIC) {
                 dml_copula_aic(copula, xa, xb, &copula_aic);
                 tree_aic += copula_aic;
             }
@@ -219,7 +221,7 @@ fit_rvine_trees(igraph_t **trees,
         igraph_destroy(graph);
 
         // Check if the vine should be truncated.
-        if (truncation == DML_VINE_TRUNCATION_AIC && tree_aic >= 0) {
+        if (trunc == DML_VINE_TRUNC_AIC && tree_aic >= 0) {
             // Free the memory used for the last tree.
             rvine_tree_cleanup(trees[k]);
             for (e = 0; e < igraph_ecount(trees[k]); e++) {
@@ -245,6 +247,7 @@ fit_rvine_trees(igraph_t **trees,
 // Compute an R-vine matrix from the trees. Based on Algorithm 3.2 of
 // Dissman, J. F. (2010). Statistical Inference for Regular Vines and
 // Application. Diploma thesis. University of Technology, Munich.
+
 static void
 rvine_trees_to_vine(dml_vine_t *vine, igraph_t **trees)
 {
@@ -256,7 +259,7 @@ rvine_trees_to_vine(dml_vine_t *vine, igraph_t **trees)
     dml_copula_t *copula = NULL; // Initialized to avoid GCC warnings.
     igraph_integer_t e; // Edge id.
 
-    n = vine->dimension;
+    n = vine->dim;
     order_inv = g_malloc0_n(n, sizeof(size_t));
     B = gsl_vector_short_calloc(n);
 
@@ -356,23 +359,25 @@ rvine_trees_to_vine(dml_vine_t *vine, igraph_t **trees)
 // Sequential R-vine estimation method. Based on Algorithm 4.1 of
 // Dissman, J. F. (2010). Statistical Inference for Regular Vines and
 // Application. Diploma thesis. University of Technology, Munich.
+
 static void
 vine_fit_rvine(dml_vine_t *vine,
                const gsl_matrix *data,
-               dml_vine_weight_t weight,
-               dml_vine_truncation_t truncation,
-               dml_copula_indeptest_t indeptest,
-               double indeptest_level,
+               const dml_vine_weight_t weight,
+               const dml_vine_trunc_t truncation,
+               const dml_copula_indeptest_t indeptest,
+               const double indeptest_level,
                const dml_copula_type_t *types,
-               size_t types_size,
-               dml_copula_selection_t selection,
+               const size_t types_size,
+               const dml_copula_select_t selection,
+               const double gof_level,
                const gsl_rng *rng)
 {
     igraph_t **trees;
 
     trees = g_malloc0_n(data->size2 - 1, sizeof(igraph_t *));
     fit_rvine_trees(trees, data, weight, truncation, indeptest, indeptest_level,
-                    types, types_size, selection, rng);
+                    types, types_size, selection, gof_level, rng);
     rvine_trees_to_vine(vine, trees);
 
     for (size_t i = 0; i < data->size2 - 1; i++) {
@@ -390,6 +395,7 @@ vine_fit_rvine(dml_vine_t *vine,
 // Algorithm 5.2 of Dissman, J. F. (2010). Statistical Inference
 // for Regular Vines and Application. Diploma thesis. University
 // of Technology, Munich.
+
 static void
 vine_ran_rvine(const dml_vine_t *vine, const gsl_rng *rng, gsl_matrix *data)
 {
@@ -398,7 +404,7 @@ vine_ran_rvine(const dml_vine_t *vine, const gsl_rng *rng, gsl_matrix *data)
     gsl_vector *z1 = NULL, *z2 = NULL, *hinv = NULL; // Initialized to avoid GCC warnings.
     size_t **M;
 
-    n = vine->dimension;
+    n = vine->dim;
     m = data->size1;
     vdirect = g_malloc_n(n, sizeof(gsl_vector **));
     vindirect = g_malloc_n(n, sizeof(gsl_vector **));
@@ -505,13 +511,13 @@ vine_free_rvine(dml_vine_t *vine)
 {
     g_free(vine->order);
     if (vine->matrix != NULL) {
-        for (size_t i = 0; i < vine->dimension; i++) {
+        for (size_t i = 0; i < vine->dim; i++) {
             g_free(vine->matrix[i]);
         }
         g_free(vine->matrix);
     }
     if (vine->copulas != NULL) {
-        for (size_t i = 1; i < vine->dimension; i++) {
+        for (size_t i = 1; i < vine->dim; i++) {
             for (size_t j = 0; j < i; j++) {
                 if (vine->copulas[i][j] != NULL) {
                     dml_copula_free(vine->copulas[i][j]);
@@ -524,24 +530,24 @@ vine_free_rvine(dml_vine_t *vine)
 }
 
 dml_vine_t *
-dml_vine_alloc_rvine(const size_t dimension)
+dml_vine_alloc_rvine(const size_t dim)
 {
     dml_vine_t *vine;
 
     vine = g_malloc(sizeof(dml_vine_t));
     vine->type = DML_VINE_RVINE;
-    vine->dimension = dimension;
+    vine->dim = dim;
     vine->trees = 0;
-    vine->order = g_malloc_n(dimension, sizeof(size_t));
+    vine->order = g_malloc_n(dim, sizeof(size_t));
     // R-vine matrix.
-    vine->matrix = g_malloc_n(dimension, sizeof(size_t *));
-    for (size_t i = 0; i < dimension; i++) {
+    vine->matrix = g_malloc_n(dim, sizeof(size_t *));
+    for (size_t i = 0; i < dim; i++) {
         vine->matrix[i] = g_malloc0_n(i + 1, sizeof(size_t));
     }
     // Lower triangular matrix with the copulas.
-    vine->copulas = g_malloc_n(dimension, sizeof(dml_copula_t **));
+    vine->copulas = g_malloc_n(dim, sizeof(dml_copula_t **));
     vine->copulas[0] = NULL;
-    for (size_t i = 1; i < dimension; i++) {
+    for (size_t i = 1; i < dim; i++) {
         vine->copulas[i] = g_malloc0_n(i, sizeof(dml_copula_t *));
     }
     vine->fit = vine_fit_rvine;

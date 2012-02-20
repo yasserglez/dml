@@ -65,7 +65,7 @@ test_measure_tau_large()
 }
 
 void
-test_measure_empcop_cvm_normal()
+test_measure_cvm_normal()
 {
     size_t n = 500;
     gsl_rng *rng;
@@ -82,7 +82,7 @@ test_measure_empcop_cvm_normal()
     copula = dml_copula_alloc_normal(0.75);
     dml_copula_ran(copula, rng, u, v);
     measure = dml_measure_alloc(u, v);
-    g_assert(dml_measure_empcop_cvm_pvalue(measure, rng) < 0.01);
+    g_assert(dml_measure_cvm_pvalue(measure, rng) < 0.01);
 
     dml_measure_free(measure);
     dml_copula_free(copula);
@@ -92,7 +92,7 @@ test_measure_empcop_cvm_normal()
 }
 
 void
-test_measure_empcop_cvm_indep()
+test_measure_cvm_indep()
 {
     size_t n = 500;
     gsl_rng *rng;
@@ -109,7 +109,7 @@ test_measure_empcop_cvm_indep()
     copula = dml_copula_alloc_indep();
     dml_copula_ran(copula, rng, u, v);
     measure = dml_measure_alloc(u, v);
-    g_assert(dml_measure_empcop_cvm_pvalue(measure, rng) > 0.01);
+    g_assert(dml_measure_cvm_pvalue(measure, rng) > 0.01);
 
     dml_measure_free(measure);
     dml_copula_free(copula);

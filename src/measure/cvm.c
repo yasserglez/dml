@@ -102,7 +102,7 @@ I_n(int n, int p, double *J, double *K, double *L)
 }
 
 static void
-compute_empcop_cvm_stat(dml_measure_t *measure)
+compute_cvm_stat(dml_measure_t *measure)
 {
     size_t n;
     double *R, *J, *K, *L;
@@ -140,7 +140,7 @@ compute_empcop_cvm_stat(dml_measure_t *measure)
     // Compute the value of the global statistic.
     stat = I_n(n, 2, J, K, L);
 
-    measure->empcop_cvm_stat = stat;
+    measure->cvm_stat = stat;
 
     g_free(R);
     g_free(J);
@@ -149,7 +149,7 @@ compute_empcop_cvm_stat(dml_measure_t *measure)
 }
 
 static void
-compute_empcop_cvm_pvalue(dml_measure_t *measure, const gsl_rng *rng)
+compute_cvm_pvalue(dml_measure_t *measure, const gsl_rng *rng)
 {
     size_t k, count;
     int i, j, index;
@@ -158,7 +158,7 @@ compute_empcop_cvm_pvalue(dml_measure_t *measure, const gsl_rng *rng)
 
     if (stats_sample_size != measure->x->size) {
         // Update the realizations of the test statistics. This code is based
-        /// on the simulate_empirical_copula function of the copula R package.
+        // on the simulate_empirical_copula function of the copula R package.
         // It generates approximate independent realizations of the test
         // statistics under mutual independence. The original code of the
         // function was modified, since only the bivariate case is used here.
@@ -207,32 +207,32 @@ compute_empcop_cvm_pvalue(dml_measure_t *measure, const gsl_rng *rng)
     }
 
     // Compute the corresponding p-value.
-    stat = dml_measure_empcop_cvm_stat(measure);
+    stat = dml_measure_cvm_stat(measure);
     count = 0;
     for (k = 0; k < stats_count; k++)
         if (stats[k] >= stat)
             count++;
     pvalue = (double) (count + 0.5) / (stats_count + 1.0);
 
-    measure->empcop_cvm_pvalue = pvalue;
+    measure->cvm_pvalue = pvalue;
 }
 
 double
-dml_measure_empcop_cvm_stat(dml_measure_t *measure)
+dml_measure_cvm_stat(dml_measure_t *measure)
 {
-    if (gsl_isnan(measure->empcop_cvm_stat)) {
-        compute_empcop_cvm_stat(measure);
+    if (gsl_isnan(measure->cvm_stat)) {
+        compute_cvm_stat(measure);
     }
 
-    return measure->empcop_cvm_stat;
+    return measure->cvm_stat;
 }
 
 double
-dml_measure_empcop_cvm_pvalue(dml_measure_t *measure, const gsl_rng *rng)
+dml_measure_cvm_pvalue(dml_measure_t *measure, const gsl_rng *rng)
 {
-    if (gsl_isnan(measure->empcop_cvm_pvalue)) {
-        compute_empcop_cvm_pvalue(measure, rng);
+    if (gsl_isnan(measure->cvm_pvalue)) {
+        compute_cvm_pvalue(measure, rng);
     }
 
-    return measure->empcop_cvm_pvalue;
+    return measure->cvm_pvalue;
 }

@@ -18,8 +18,8 @@ dml_measure_alloc(const gsl_vector *x, const gsl_vector *y)
     measure->y = y;
     measure->tau_coef = GSL_NAN;
     measure->tau_pvalue = GSL_NAN;
-    measure->empcop_cvm_stat = GSL_NAN;
-    measure->empcop_cvm_pvalue = GSL_NAN;
+    measure->cvm_stat = GSL_NAN;
+    measure->cvm_pvalue = GSL_NAN;
 
     return measure;
 }
