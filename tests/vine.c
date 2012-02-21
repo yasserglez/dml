@@ -85,7 +85,7 @@ test_cvine_fit_2d()
 void
 test_cvine_ran_fit_20d_normal_trunc()
 {
-    size_t n = 20, m = 2500;
+    size_t n = 20, m = 2000;
     gsl_rng *rng;
     dml_copula_type_t types[] = { DML_COPULA_NORMAL };
     size_t types_size = 1;
@@ -141,7 +141,7 @@ static void
 test_cvine_ran_fit_5d_normal_indep(dml_vine_weight_t weight,
                                    dml_copula_indeptest_t indeptest)
 {
-    size_t n = 5, m = 2500;
+    size_t n = 5, m = 1000;
     gsl_rng *rng;
     dml_copula_type_t types[] = { DML_COPULA_NORMAL };
     size_t types_size = 1;
@@ -298,7 +298,7 @@ static void
 test_dvine_ran_fit_5d_normal_indep(dml_vine_weight_t weight,
                                    dml_copula_indeptest_t indeptest)
 {
-    size_t n = 5, m = 2500;
+    size_t n = 5, m = 1000;
     gsl_rng *rng;
     dml_copula_type_t types[] = { DML_COPULA_NORMAL };
     size_t types_size = 1;
@@ -381,7 +381,7 @@ test_dvine_ran_fit_cvm_5d_normal_indep()
 void
 test_dvine_ran_fit_20d_normal_trunc()
 {
-    size_t n = 20, m = 2500;
+    size_t n = 20, m = 1750;
     gsl_rng *rng;
     dml_copula_type_t types[] = { DML_COPULA_NORMAL };
     size_t types_size = 1;
@@ -515,7 +515,7 @@ test_rvine_fit_2d()
 void
 test_rvine_ran_fit_3d_normal()
 {
-    size_t n = 3, m = 2500;
+    size_t n = 3, m = 500;
     gsl_rng *rng;
     dml_copula_type_t types[] = { DML_COPULA_NORMAL };
     size_t types_size = 1;
@@ -582,7 +582,7 @@ test_rvine_ran_fit_3d_normal()
 static void
 test_rvine_ran_fit_7d_normal(dml_vine_weight_t weight)
 {
-    size_t n = 7, m = 2500;
+    size_t n = 7, m = 2000;
     gsl_rng *rng;
     dml_copula_type_t types[] = { DML_COPULA_NORMAL };
     size_t types_size = 1;
@@ -704,7 +704,7 @@ test_rvine_ran_fit_cvm_7d_normal()
 
 void test_rvine_ran_fit_9d_normal_trunc()
 {
-    size_t n = 7, m = 2500;
+    size_t n = 7, m = 1750;
     gsl_rng *rng;
     dml_copula_type_t types[] = { DML_COPULA_NORMAL };
     size_t types_size = 1;
