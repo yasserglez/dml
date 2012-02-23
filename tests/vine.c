@@ -582,7 +582,7 @@ test_rvine_ran_fit_3d_normal()
 static void
 test_rvine_ran_fit_7d_normal(dml_vine_weight_t weight)
 {
-    size_t n = 7, m = 2000;
+    size_t n = 7, m = 2250;
     gsl_rng *rng;
     dml_copula_type_t types[] = { DML_COPULA_NORMAL };
     size_t types_size = 1;
