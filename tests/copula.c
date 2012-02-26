@@ -219,7 +219,7 @@ TEST_DML_COPULA_FUNC_P(rclayton270, hinv, clayton_theta_negative, 20)
 void
 test_normal_gof_normal()
 {
-    size_t n = 100;
+    size_t n = 50;
     gsl_rng *rng;
     gsl_vector *u, *v;
     dml_copula_t *copula;
@@ -252,7 +252,7 @@ test_normal_gof_normal()
 void
 test_normal_gof_clayton()
 {
-    size_t n = 500;
+    size_t n = 400;
     gsl_rng *rng;
     gsl_vector *u, *v;
     dml_copula_t *copula;
@@ -285,7 +285,7 @@ test_normal_gof_clayton()
 void
 test_copula_select_indeptest_none()
 {
-    size_t m = 100;
+    size_t m = 50;
     gsl_rng *rng;
     gsl_vector *u, *v;
     dml_copula_t *copula, *selected;
@@ -326,7 +326,7 @@ test_copula_select_indeptest_none()
 static void
 test_copula_select_indeptest(dml_copula_indeptest_t indeptest)
 {
-    size_t m = 300;
+    size_t m = 150;
     gsl_rng *rng;
     gsl_vector *u, *v;
     dml_copula_t *copula, *selected;
@@ -377,7 +377,7 @@ test_copula_select_indeptest_cvm(dml_copula_indeptest_t indeptest)
 void
 test_copula_select_aic()
 {
-    size_t m = 100;
+    size_t m = 200;
     gsl_rng *rng;
     gsl_vector *u, *v;
     dml_copula_t *copula, *selected;
