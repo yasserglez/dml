@@ -381,7 +381,7 @@ test_dvine_ran_fit_cvm_5d_normal_indep()
 void
 test_dvine_ran_fit_20d_normal_trunc()
 {
-    size_t n = 20, m = 2250;
+    size_t n = 20, m = 2500;
     gsl_rng *rng;
     dml_copula_type_t types[] = { DML_COPULA_NORMAL };
     size_t types_size = 1;
