@@ -53,7 +53,7 @@ dml_copula_select(const gsl_vector *u,
             selected = dml_copula_alloc(types[0]);
             dml_copula_fit(selected, u, v, measure);
 
-            if (select == DML_COPULA_SELECT_GOF) {
+            if (select == DML_COPULA_SELECT_CVM) {
                 dml_copula_gof(selected, u, v, measure, rng, &selected_fit);
                 if (selected_fit < gof_level) {
                     dml_copula_free(selected);
@@ -92,7 +92,7 @@ dml_copula_select(const gsl_vector *u,
                         dml_copula_free(candidate);
                     }
                     break;
-                case DML_COPULA_SELECT_GOF:
+                case DML_COPULA_SELECT_CVM:
                     dml_copula_gof(candidate, u, v, measure, rng, &candidate_fit);
                     if (candidate_fit >= gof_level) {
                         // The candidate copula was not rejected.
