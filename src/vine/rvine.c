@@ -162,7 +162,7 @@ fit_rvine_trees(igraph_t **trees,
                 xb = VAP(trees[k - 1], "data", b);
                 x = gsl_vector_alloc(m);
                 dml_copula_h(copula, xa, xb, x);
-                // The edge id of a tree are the vertex id of the next tree.
+                // The edge ids of a tree are the vertex ids of the next tree.
                 SETVAP(graph, "data", e, x);
                 gsl_sort_vector_index(perm, x);
                 rank = gsl_permutation_alloc(m);
@@ -178,7 +178,7 @@ fit_rvine_trees(igraph_t **trees,
                     igraph_edge(trees[k - 1], b, &ba, &bb);
                     if (aa == ba || aa == bb || ab == ba || ab == bb) {
                         igraph_add_edge(graph, a, b);
-                        igraph_get_eid(graph, &e, a, b, 0);
+                        igraph_get_eid(graph, &e, a, b, IGRAPH_UNDIRECTED);
 
                         // Calculate the weight of the edge.
                         xa = VAP(graph, "data", a);
@@ -237,7 +237,6 @@ fit_rvine_trees(igraph_t **trees,
             }
         }
 
-        if (k > 0) rvine_tree_cleanup(trees[k - 1]);
         igraph_destroy(graph);
 
         // Check if the vine should be truncated.
@@ -253,11 +252,16 @@ fit_rvine_trees(igraph_t **trees,
             trees[k] = NULL;
             break;
         }
+
+        if (k > 0) rvine_tree_cleanup(trees[k - 1]);
     }
 
     // Cleanup the last tree if the vine was completely estimated.
+    // If the vine was truncated, the last tree will be freed in
+    // the function vine_fit_rvine, because the rvine_trees_to_vine
+    // function needs some attributes of its edges.
     if (k == n - 1) {
-        rvine_tree_cleanup(trees[k - 1]);
+        rvine_tree_cleanup(trees[n - 2]);
     }
 
     g_free(graph_weight);
@@ -272,32 +276,86 @@ fit_rvine_trees(igraph_t **trees,
 static void
 rvine_trees_to_vine(dml_vine_t *vine, igraph_t **trees)
 {
-    size_t n;
+    size_t n = vine->dim;
     size_t *order_inv;
     gsl_vector_short *B;
     igraph_integer_t Cea, Ceb;
     size_t x = 0, x_hat = 0, x_hat_hat = 0; // Initialized to avoid GCC warnings.
     dml_copula_t *copula = NULL; // Initialized to avoid GCC warnings.
     igraph_integer_t e; // Edge id.
+    igraph_t **last_trees;
+    igraph_t *graph;
+    gsl_vector_short *Ue, *Ua, *Ub;
+    igraph_integer_t a, b, aa, ab, ba, bb; // Vertex id.
 
-    n = vine->dim;
+    // Set the number of trees of the vines.
+    vine->trees = n - 1;
+    while (trees[vine->trees - 1] == NULL) vine->trees--;
+
+    // Nothing to do for vines without trees.
+    if (vine->trees == 0) return;
+
+    // Selecting a structure for the trees that were truncated.
+    // Is this really necessary? Think a better solution.
+    if (vine->trees != n - 1) {
+        igraph_i_set_attribute_table(&igraph_cattribute_table);
+        last_trees = g_malloc_n(n - 1 - vine->trees, sizeof(igraph_t *));
+        graph = g_malloc(sizeof(igraph_t));
+
+        for (size_t k = vine->trees; k < n - 1; k++) { // Tree index.
+            igraph_empty(graph, n - k, IGRAPH_UNDIRECTED);
+
+            // Adding all the "possible" edges.
+            for (a = 0; a < igraph_vcount(graph) - 1; a++) {
+                for (b = a + 1; b < igraph_vcount(graph); b++) {
+                    // Checking the proximity condition.
+                    igraph_edge(k <= vine->trees ? trees[k - 1] : last_trees[k - 1 - vine->trees], a, &aa, &ab);
+                    igraph_edge(k <= vine->trees ? trees[k - 1] : last_trees[k - 1 - vine->trees], b, &ba, &bb);
+                    if (aa == ba || aa == bb || ab == ba || ab == bb) {
+                        igraph_add_edge(graph, a, b);
+                        igraph_get_eid(graph, &e, a, b, IGRAPH_UNDIRECTED);
+
+                        // Variables "connected" by this edge and conditioned set.
+                        Ua = EAP(k <= vine->trees ? trees[k - 1] : last_trees[k - 1 - vine->trees], "Ue", a);
+                        Ub = EAP(k <= vine->trees ? trees[k - 1] : last_trees[k - 1 - vine->trees], "Ue", b);
+                        Ue = gsl_vector_short_calloc(n);
+                        for (size_t i = 0; i < n; i++) {
+                            gsl_vector_short_set(Ue, i,
+                                    gsl_vector_short_get(Ua, i)
+                                            | gsl_vector_short_get(Ub, i));
+                            if (gsl_vector_short_get(Ua, i)
+                                    && !gsl_vector_short_get(Ub, i)) {
+                                SETEAN(graph, "Cea", e, i + 1);
+                            }
+                            if (gsl_vector_short_get(Ub, i)
+                                    && !gsl_vector_short_get(Ua, i)) {
+                                SETEAN(graph, "Ceb", e, i + 1);
+                            }
+                        }
+                        SETEAP(graph, "Ue", e, Ue);
+                    }
+                }
+            }
+
+            // Compute the minimum weight spanning tree.
+            last_trees[k - vine->trees] = g_malloc(sizeof(igraph_t));
+            igraph_minimum_spanning_tree_unweighted(graph, last_trees[k - vine->trees]);
+
+            igraph_destroy(graph);
+        }
+    }
+
     order_inv = g_malloc0_n(n, sizeof(size_t));
     B = gsl_vector_short_calloc(n);
-
-    vine->trees = n - 1;
-    while (trees[vine->trees - 1] == NULL)
-        vine->trees--;
 
     // for loop in line 2.
     for (size_t i = 0; i < n - 1; i++) {
         if (trees[n - i - 2] == NULL) {
-            // Truncated. Get an unassigned variable from the last tree.
-            for (e = 0; e < igraph_ecount(trees[vine->trees - 1]); e++) {
-                x = EAN(trees[vine->trees - 1], "Cea", e);
-                x_hat = EAN(trees[vine->trees - 1], "Ceb", e);
+            for (e = 0; e < igraph_ecount(last_trees[n - i - 2 - vine->trees]); e++) {
+                x = EAN(last_trees[n - i - 2 - vine->trees], "Cea", e);
+                x_hat = EAN(last_trees[n - i - 2 - vine->trees], "Ceb", e);
                 if (!gsl_vector_short_get(B, x - 1)
                         && !gsl_vector_short_get(B, x_hat - 1)) {
-                    // Mark the truncated entries with 0 and NULL.
                     x_hat = 0;
                     copula = NULL;
                     break;
@@ -332,11 +390,10 @@ rvine_trees_to_vine(dml_vine_t *vine, igraph_t **trees)
                     if (x == Cea) {
                         x_hat_hat = Ceb;
                         if (!gsl_vector_short_get(B, x_hat_hat - 1)) {
-                            /* The pseudocode of the algorithm does not
-                             * included this check. Invalid matrices
-                             * were generated when xhathat is set to an
-                             * index already assigned to a diagonal entry.
-                             */
+                            // The pseudocode of the algorithm does not included
+                            // this check. Invalid matrices were generated when
+                            // x_hat_hat is set to an index already assigned
+                            // to a diagonal entry.
                             copula = EAP(trees[n - k - 1], "copula", e);
                             break;
                         }
@@ -373,6 +430,19 @@ rvine_trees_to_vine(dml_vine_t *vine, igraph_t **trees)
         }
     }
 
+    if (vine->trees != n - 1) {
+        for (size_t i = 0; i < n - 1 - vine->trees; i++) {
+            for (e = 0; e < igraph_ecount(last_trees[i]); e++) {
+                Ue = EAP(last_trees[i], "Ue", e);
+                gsl_vector_short_free(Ue);
+            }
+            DELEA(last_trees[i], "Ue");
+            igraph_destroy(last_trees[i]);
+            g_free(last_trees[i]);
+        }
+        g_free(last_trees);
+        g_free(graph);
+    }
     g_free(order_inv);
     gsl_vector_short_free(B);
 }
@@ -401,6 +471,10 @@ vine_fit_rvine(dml_vine_t *vine,
                     types, types_size, select, gof_level, rng);
     rvine_trees_to_vine(vine, trees);
 
+    // If the vine was truncated, free the memory of the last tree.
+    if (vine->trees > 0 && vine->trees != data->size2 - 1) {
+        rvine_tree_cleanup(trees[vine->trees - 1]);
+    }
     for (size_t i = 0; i < data->size2 - 1; i++) {
         if (trees[i] != NULL) {
             igraph_destroy(trees[i]);
@@ -494,7 +568,7 @@ vine_ran_rvine(const dml_vine_t *vine, const gsl_rng *rng, gsl_matrix *data)
             }
             if (vine->matrix[i][k] == 0
                     || dml_copula_type(vine->copulas[i][k]) == DML_COPULA_INDEP) {
-                // Vine truncated or Independence copula.
+                // Vine truncated or independence copula.
                 gsl_vector_memcpy(vdirect[i - 1][k], z1);
             } else {
                 dml_copula_h(vine->copulas[i][k], z1, z2, vdirect[i - 1][k]);

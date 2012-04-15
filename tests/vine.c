@@ -811,3 +811,30 @@ void test_rvine_ran_fit_9d_normal_trunc()
     gsl_matrix_free(fitted_data);
     gsl_rng_free(rng);
 }
+
+void test_rvine_bugfix1()
+{
+    gsl_matrix *data;
+    gsl_rng *rng;
+    dml_vine_t *vine;
+    dml_copula_type_t types[] = { DML_COPULA_NORMAL };
+    size_t types_size = 1;
+
+    rng = gsl_rng_alloc(gsl_rng_taus);
+    gsl_rng_set(rng, g_test_rand_int());
+    data = gsl_matrix_alloc(100, 5);
+    for (size_t i = 0; i < 100; i++) {
+        for (size_t j = 0; j < 5; j++) {
+            gsl_matrix_set(data, i, j, gsl_rng_uniform(rng));
+        }
+    }
+
+    vine = dml_vine_alloc(DML_VINE_RVINE, 5);
+    dml_vine_fit(vine, data, DML_VINE_WEIGHT_TAU, DML_VINE_TRUNC_AIC,
+                 DML_COPULA_INDEPTEST_NONE, 0.01, &types[0], types_size,
+                 DML_COPULA_SELECT_AIC, 0.01, rng);
+    dml_vine_free(vine);
+
+    gsl_rng_free(rng);
+    gsl_matrix_free(data);
+}

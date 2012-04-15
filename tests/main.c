@@ -78,6 +78,7 @@ main(int argc, char **argv)
     g_test_add_func("/vine/rvine/ran_fit_tau_7d_normal", test_rvine_ran_fit_tau_7d_normal);
     g_test_add_func("/vine/rvine/ran_fit_cvm_7d_normal", test_rvine_ran_fit_cvm_7d_normal);
     g_test_add_func("/vine/rvine/ran_fit_9d_normal_trunc", test_rvine_ran_fit_9d_normal_trunc);
+    g_test_add_func("/vine/rvine/bugfix1", test_rvine_bugfix1);
 
     return g_test_run();
 }
