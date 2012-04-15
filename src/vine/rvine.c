@@ -283,10 +283,10 @@ rvine_trees_to_vine(dml_vine_t *vine, igraph_t **trees)
     size_t x = 0, x_hat = 0, x_hat_hat = 0; // Initialized to avoid GCC warnings.
     dml_copula_t *copula = NULL; // Initialized to avoid GCC warnings.
     igraph_integer_t e; // Edge id.
-    igraph_t **last_trees;
-    igraph_t *graph;
-    gsl_vector_short *Ue, *Ua, *Ub;
     igraph_integer_t a, b, aa, ab, ba, bb; // Vertex id.
+    igraph_t **last_trees = NULL;
+    igraph_t *graph = NULL;
+    gsl_vector_short *Ue, *Ua, *Ub;
 
     // Set the number of trees of the vines.
     vine->trees = n - 1;
