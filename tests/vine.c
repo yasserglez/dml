@@ -704,7 +704,7 @@ test_rvine_ran_fit_cvm_7d_normal()
 
 void test_rvine_ran_fit_9d_normal_trunc()
 {
-    size_t n = 7, m = 2250;
+    size_t n = 7, m = 2500;
     gsl_rng *rng;
     dml_copula_type_t types[] = { DML_COPULA_NORMAL };
     size_t types_size = 1;

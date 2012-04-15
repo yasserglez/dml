@@ -94,7 +94,7 @@ test_measure_cvm_normal()
 void
 test_measure_cvm_indep()
 {
-    size_t n = 350;
+    size_t n = 500;
     gsl_rng *rng;
     gsl_vector *u, *v;
     dml_measure_t *measure;
