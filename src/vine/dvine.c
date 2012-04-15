@@ -418,7 +418,7 @@ vine_ran_dvine(const dml_vine_t *vine,
             }
 
             if (vine->trees >= 3 && i > 3) {
-                for (size_t j = 2; j <= i - 2; j++) {
+                for (size_t j = 2; j <= GSL_MIN(vine->trees - 1, i - 2); j++) {
                     gsl_vector_set(x, 0, gsl_matrix_get(v, i-1, 2*j-2));
                     gsl_vector_set(y, 0, gsl_matrix_get(v, i, 2*j-1));
                     dml_copula_h(vine->copulas[j-1][i-j-1], x, y, r);
