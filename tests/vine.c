@@ -814,6 +814,8 @@ void test_rvine_ran_fit_9d_normal_trunc()
 
 void test_rvine_bugfix1()
 {
+    // This code revealed a bug in the estimation of truncated R-vines.
+
     gsl_matrix *data;
     gsl_rng *rng;
     dml_vine_t *vine;
