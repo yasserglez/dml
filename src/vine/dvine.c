@@ -15,7 +15,8 @@ static void
 dvine_select_order(dml_vine_t *vine,
                    const gsl_matrix *data,
                    dml_vine_weight_t weight,
-                   dml_measure_t ***measure_matrix)
+                   dml_measure_t ***measure_matrix,
+                   const gsl_rng *rng)
 {
     int n;
     double **weight_matrix;
@@ -92,7 +93,7 @@ dvine_select_order(dml_vine_t *vine,
     // linkern.c files contain selected functions from Concorde with minor
     // modifications to avoid unneeed dependences. Refer to the original
     // source code of Concorde and its documentation for more information.
-    CCutil_sprand(1, &rstate);
+    CCutil_sprand(INT_MAX * gsl_rng_uniform(rng), &rstate);
     CCutil_graph2dat_matrix(ncount, ecount, elist, elen, 0, &dat);
     cycle = g_malloc_n(ncount, sizeof(int));
     CClinkern_tour(ncount, &dat, ecount, elist, 100000000, ncount,
@@ -190,7 +191,7 @@ vine_fit_dvine(dml_vine_t *vine,
     // determines the structure of the first tree (and therefore the rest of
     // the vine).
     if (n > 2) {
-        dvine_select_order(vine, data, weight, measure_matrix);
+        dvine_select_order(vine, data, weight, measure_matrix, rng);
     } else {
         vine->order[0] = 0;
         vine->order[1] = 1;
