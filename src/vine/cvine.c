@@ -110,7 +110,11 @@ vine_fit_cvine(dml_vine_t *vine,
                 xa = VAP(trees[k - 1], "data", a);
                 xb = VAP(trees[k - 1], "data", b);
                 x = gsl_vector_alloc(m);
-                dml_copula_h(copula, xa, xb, x);
+                if (a == root_vertex) {
+                    dml_copula_h(copula, xb, xa, x);
+                } else {
+                    dml_copula_h(copula, xa, xb, x);
+                }
                 // The edge id of a tree are the vertex id of the next tree.
                 SETVAP(trees[k], "data", e, x); // Pseudo-observations.
                 SETVAN(trees[k], "index", e, EAN(trees[k - 1], "index", e));
@@ -181,10 +185,17 @@ vine_fit_cvine(dml_vine_t *vine,
             igraph_edge(trees[k], e, &a, &b);
             xa = VAP(trees[k], "data", a);
             xb = VAP(trees[k], "data", b);
-
-            copula = dml_copula_select(xa, xb,
-                    measure_matrix[(size_t) a][(size_t) b], indeptest,
-                    indeptest_level, types, types_size, select, gof_level, rng);
+            if (a == root_vertex) {
+                copula = dml_copula_select(
+                        xb, xa, measure_matrix[(size_t) b][(size_t) a],
+                        indeptest, indeptest_level, types, types_size, select,
+                        gof_level, rng);
+            } else {
+                copula = dml_copula_select(
+                        xa, xb, measure_matrix[(size_t) a][(size_t) b],
+                        indeptest, indeptest_level, types, types_size, select,
+                        gof_level, rng);
+            }
             SETEAP(trees[k], "copula", e, copula);
 
             // Get information for the truncation of the vine.

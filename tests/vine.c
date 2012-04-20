@@ -218,6 +218,62 @@ test_cvine_ran_fit_cvm_5d_normal_indep()
     test_cvine_ran_fit_5d_normal_indep(DML_VINE_WEIGHT_CVM, DML_COPULA_INDEPTEST_CVM);
 }
 
+void test_cvine_bugfix1()
+{
+    // This code revealed a bug in the C-vine inference algorithm
+    // regarding the order of the arguments of the dml_copula_select
+    // and dml_copula_h functions (conditioning variable).
+
+    gsl_matrix *data;
+    gsl_rng *rng;
+    dml_vine_t *vine;
+    dml_copula_t *copula;
+    gsl_vector_view u, v;
+    dml_copula_type_t types[] = { DML_COPULA_NORMAL, DML_COPULA_CLAYTON,
+            DML_COPULA_RCLAYTON90, DML_COPULA_RCLAYTON180,
+            DML_COPULA_RCLAYTON270 };
+    size_t types_size = 5;
+    dml_measure_t *measure;
+
+    rng = gsl_rng_alloc(gsl_rng_taus);
+    gsl_rng_set(rng, g_test_rand_int());
+    data = gsl_matrix_alloc(100, 5);
+    copula = dml_copula_alloc_normal(0.9);
+    u = gsl_matrix_column(data, 0);
+    v = gsl_matrix_column(data, 1);
+    dml_copula_ran(copula, rng, &u.vector, &v.vector);
+    dml_copula_free(copula);
+    for (size_t i = 2; i < 5; i++) {
+        for (size_t j = 0; j < 100; j++) {
+            gsl_matrix_set(data, j, i, gsl_rng_uniform(rng));
+        }
+    }
+
+    vine = dml_vine_alloc(DML_VINE_CVINE, 5);
+    dml_vine_fit(vine, data, DML_VINE_WEIGHT_TAU, DML_VINE_TRUNC_NONE,
+            DML_COPULA_INDEPTEST_CVM, 0.01, &types[0], types_size,
+            DML_COPULA_SELECT_AIC, 0.01, rng);
+    dml_vine_ran(vine, rng, data);
+    dml_vine_free(vine);
+
+    for (size_t i = 1; i < 5; i++) {
+        for (size_t j = 0; j < i; j++) {
+            u = gsl_matrix_column(data, i);
+            v = gsl_matrix_column(data, j);
+            measure = dml_measure_alloc(&u.vector, &v.vector);
+            if (i == 1 && j == 0) {
+                g_assert(dml_measure_tau_coef(measure) > 0.5);
+            } else {
+                g_assert(dml_measure_tau_coef(measure) < 0.5);
+            }
+            dml_measure_free(measure);
+        }
+    }
+
+    gsl_rng_free(rng);
+    gsl_matrix_free(data);
+}
+
 void
 test_dvine_alloc()
 {
