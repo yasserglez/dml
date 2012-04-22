@@ -97,5 +97,6 @@ void test_rvine_ran_fit_tau_7d_normal();
 void test_rvine_ran_fit_cvm_7d_normal();
 void test_rvine_ran_fit_9d_normal_trunc();
 void test_rvine_bugfix1();
+void test_rvine_bugfix2();
 
 #endif /* TEST_H_ */

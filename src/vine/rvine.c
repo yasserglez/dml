@@ -81,6 +81,10 @@ rvine_tree_cleanup(igraph_t *tree)
     DELEA(tree, "measure");
 }
 
+// Select an R-vine (R-vine trees) to model the given sample. Based on
+// Algorithm 4.1 of Dissman, J. F. (2010). Statistical Inference for Regular
+// Vines and Application. Diploma thesis. University of Technology, Munich.
+
 static void
 fit_rvine_trees(igraph_t **trees,
                 const gsl_matrix *data,
@@ -100,8 +104,9 @@ fit_rvine_trees(igraph_t **trees,
     dml_copula_t *copula;
     gsl_vector *x;
     igraph_integer_t e; // Edge id.
-    igraph_integer_t a, b, aa, ab, ba, bb; // Vertex id.
-    gsl_vector *xa, *xb; // Samples of 'a' and 'b', respectively.
+    igraph_integer_t a, aa, ab, b, ba, bb; // Vertex id.
+    gsl_vector *xa, *xaa, *xab, *xb, *xba, *xbb; // Samples of a, aa, ab, b, ba and bb.
+    igraph_integer_t Cea, Ceb;
     gsl_vector_short *Ue, *Ua, *Ub;
     size_t k;
     dml_measure_t *measure;
@@ -154,23 +159,7 @@ fit_rvine_trees(igraph_t **trees,
         } else {
             igraph_empty(graph, n - k, IGRAPH_UNDIRECTED);
 
-            // Compute the pseudo-observations.
-            for (e = 0; e < igraph_ecount(trees[k - 1]); e++) {
-                igraph_edge(trees[k - 1], e, &a, &b);
-                copula = EAP(trees[k - 1], "copula", e);
-                xa = VAP(trees[k - 1], "data", a);
-                xb = VAP(trees[k - 1], "data", b);
-                x = gsl_vector_alloc(m);
-                dml_copula_h(copula, xa, xb, x);
-                // The edge ids of a tree are the vertex ids of the next tree.
-                SETVAP(graph, "data", e, x);
-                gsl_sort_vector_index(perm, x);
-                rank = gsl_permutation_alloc(m);
-                gsl_permutation_inverse(rank, perm);
-                SETVAP(graph, "rank", e, rank);
-            }
-
-            // Adding all the "possible" edges.
+            // Adding all "possible" edges.
             for (a = 0; a < igraph_vcount(graph) - 1; a++) {
                 for (b = a + 1; b < igraph_vcount(graph); b++) {
                     // Checking the proximity condition.
@@ -179,13 +168,6 @@ fit_rvine_trees(igraph_t **trees,
                     if (aa == ba || aa == bb || ab == ba || ab == bb) {
                         igraph_add_edge(graph, a, b);
                         igraph_get_eid(graph, &e, a, b, IGRAPH_UNDIRECTED);
-
-                        // Calculate the weight of the edge.
-                        xa = VAP(graph, "data", a);
-                        xb = VAP(graph, "data", b);
-                        xa_rank = VAP(graph, "rank", a);
-                        xb_rank = VAP(graph, "rank", b);
-                        rvine_set_weight(graph, weight, e, xa, xb, xa_rank, xb_rank);
 
                         // Variables "connected" by this edge and conditioned set.
                         Ua = EAP(trees[k - 1], "Ue", a);
@@ -208,6 +190,59 @@ fit_rvine_trees(igraph_t **trees,
                     }
                 }
             }
+
+            // Compute pseudo-observations and edge weights.
+            for (a = 0; a < igraph_vcount(graph); a++) {
+                SETVAP(graph, "data", a, NULL);
+            }
+            for (e = 0; e < igraph_ecount(graph); e++) {
+                Cea = EAN(graph, "Cea", e);
+                Ceb = EAN(graph, "Ceb", e);
+                igraph_edge(graph, e, &a, &b);
+
+                xa = VAP(graph, "data", a);
+                if (xa == NULL) {
+                    copula = EAP(trees[k - 1], "copula", a);
+                    igraph_edge(trees[k - 1], a, &aa, &ab);
+                    xaa = VAP(trees[k - 1], "data", aa);
+                    xab = VAP(trees[k - 1], "data", ab);
+                    xa = gsl_vector_alloc(m);
+                    if (Cea == EAN(trees[k - 1], "Cea", a)) {
+                        dml_copula_h(copula, xaa, xab, xa);
+                    } else {
+                        dml_copula_h(copula, xab, xaa, xa);
+                    }
+                    SETVAP(graph, "data", a, xa);
+                    gsl_sort_vector_index(perm, xa);
+                    rank = gsl_permutation_alloc(m);
+                    gsl_permutation_inverse(rank, perm);
+                    SETVAP(graph, "rank", a, rank);
+                }
+
+                xb = VAP(graph, "data", b);
+                if (xb == NULL) {
+                    copula = EAP(trees[k - 1], "copula", b);
+                    igraph_edge(trees[k - 1], b, &ba, &bb);
+                    xba = VAP(trees[k - 1], "data", ba);
+                    xbb = VAP(trees[k - 1], "data", bb);
+                    xb = gsl_vector_alloc(m);
+                    if (Ceb == EAN(trees[k - 1], "Cea", b)) {
+                        dml_copula_h(copula, xba, xbb, xb);
+                    } else {
+                        dml_copula_h(copula, xbb, xba, xb);
+                    }
+                    SETVAP(graph, "data", b, xb);
+                    gsl_sort_vector_index(perm, xb);
+                    rank = gsl_permutation_alloc(m);
+                    gsl_permutation_inverse(rank, perm);
+                    SETVAP(graph, "rank", b, rank);
+                }
+
+                // Calculate the weight of the edge.
+                xa_rank = VAP(graph, "rank", a);
+                xb_rank = VAP(graph, "rank", b);
+                rvine_set_weight(graph, weight, e, xa, xb, xa_rank, xb_rank);
+            }
         }
 
         // Compute the minimum weight spanning tree.
@@ -220,14 +255,27 @@ fit_rvine_trees(igraph_t **trees,
         tree_aic = 0;
         for (e = 0; e < igraph_ecount(trees[k]); e++) {
             igraph_edge(trees[k], e, &a, &b);
+            Cea = EAN(trees[k], "Cea", e);
+            Ceb = EAN(trees[k], "Ceb", e);
             xa = VAP(trees[k], "data", a);
             xb = VAP(trees[k], "data", b);
             measure = EAP(trees[k], "measure", e);
 
-            // Assign bivariate copulas to the edges.
-            copula = dml_copula_select(xa, xb, measure, indeptest,
-                                       indeptest_level, types, types_size,
-                                       select, gof_level, rng);
+            // Assign a bivariate copula to the edge. The conditioned set is
+            // ordered to make the order of the arguments in the bivariate
+            // copulas unique as suggested in Czado, C. (2010) Pair-Copula
+            // Constructions of Multivariate Copulas. In Jaworski, P. and
+            // Durante, F. and Hardle, W. K. and Rychlik, T. (eds.) Copula
+            // Theory and Its Applications, Springer-Verlag, 93-109.
+            if (Cea < Ceb) {
+                copula = dml_copula_select(xa, xb, measure, indeptest,
+                                           indeptest_level, types, types_size,
+                                           select, gof_level, rng);
+            } else {
+                copula = dml_copula_select(xb, xa, measure, indeptest,
+                                           indeptest_level, types, types_size,
+                                           select, gof_level, rng);
+            }
             SETEAP(trees[k], "copula", e, copula);
 
             // Get information for the truncation of the vine.
@@ -547,8 +595,7 @@ vine_ran_rvine(const dml_vine_t *vine, const gsl_rng *rng, gsl_matrix *data)
                     z2 = vindirect[i][n - M[i][k]];
                 }
                 hinv = gsl_vector_alloc(m);
-                dml_copula_hinv(vine->copulas[i][k], vdirect[n - 1][k], z2,
-                                hinv);
+                dml_copula_hinv(vine->copulas[i][k], vdirect[n - 1][k], z2, hinv);
                 gsl_vector_free(vdirect[n - 1][k]);
                 vdirect[n - 1][k] = hinv;
             }
