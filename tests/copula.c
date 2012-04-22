@@ -252,7 +252,7 @@ test_normal_gof_normal()
 void
 test_normal_gof_clayton()
 {
-    size_t n = 400;
+    size_t n = 500;
     gsl_rng *rng;
     gsl_vector *u, *v;
     dml_copula_t *copula;
@@ -326,7 +326,7 @@ test_copula_select_indeptest_none()
 static void
 test_copula_select_indeptest(dml_copula_indeptest_t indeptest)
 {
-    size_t m = 150;
+    size_t m = 750;
     gsl_rng *rng;
     gsl_vector *u, *v;
     dml_copula_t *copula, *selected;

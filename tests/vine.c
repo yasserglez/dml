@@ -85,7 +85,7 @@ test_cvine_fit_2d()
 void
 test_cvine_ran_fit_20d_normal_trunc()
 {
-    size_t n = 20, m = 2250;
+    size_t n = 20, m = 1500;
     gsl_rng *rng;
     dml_copula_type_t types[] = { DML_COPULA_NORMAL };
     size_t types_size = 1;
@@ -124,9 +124,9 @@ test_cvine_ran_fit_20d_normal_trunc()
         corr = gsl_stats_correlation(xi.vector.data, xi.vector.stride,
                                      xj.vector.data, xj.vector.stride, m);
         if (i % 2 != 0) {
-            g_assert(fabs(corr - 0.5) < 0.1);
+            g_assert(fabs(corr - 0.5) < 0.25);
         } else {
-            g_assert(fabs(corr) < 0.1);
+            g_assert(fabs(corr) < 0.25);
         }
     }
 
@@ -141,7 +141,7 @@ static void
 test_cvine_ran_fit_5d_normal_indep(dml_vine_weight_t weight,
                                    dml_copula_indeptest_t indeptest)
 {
-    size_t n = 5, m = 750;
+    size_t n = 5, m = 250;
     gsl_rng *rng;
     dml_copula_type_t types[] = { DML_COPULA_NORMAL };
     size_t types_size = 1;
@@ -185,19 +185,19 @@ test_cvine_ran_fit_5d_normal_indep(dml_vine_weight_t weight,
     xj = gsl_matrix_column(fitted_data, 1);
     corr = gsl_stats_correlation(xi.vector.data, xi.vector.stride,
                                  xj.vector.data, xj.vector.stride, m);
-    g_assert(fabs(corr - 0.75) < 0.1);
+    g_assert(fabs(corr - 0.75) < 0.25);
     xj = gsl_matrix_column(fitted_data, 2);
     corr = gsl_stats_correlation(xi.vector.data, xi.vector.stride,
                                  xj.vector.data, xj.vector.stride, m);
-    g_assert(fabs(corr + 0.75) < 0.1);
+    g_assert(fabs(corr + 0.75) < 0.25);
     xj = gsl_matrix_column(fitted_data, 3);
     corr = gsl_stats_correlation(xi.vector.data, xi.vector.stride,
                                  xj.vector.data, xj.vector.stride, m);
-    g_assert(fabs(corr - 0.95) < 0.1);
+    g_assert(fabs(corr - 0.95) < 0.25);
     xj = gsl_matrix_column(fitted_data, 4);
     corr = gsl_stats_correlation(xi.vector.data, xi.vector.stride,
                                  xj.vector.data, xj.vector.stride, m);
-    g_assert(fabs(corr + 0.95) < 0.1);
+    g_assert(fabs(corr + 0.95) < 0.25);
 
     dml_vine_free(vine);
     dml_vine_free(fitted);
@@ -354,7 +354,7 @@ static void
 test_dvine_ran_fit_5d_normal_indep(dml_vine_weight_t weight,
                                    dml_copula_indeptest_t indeptest)
 {
-    size_t n = 5, m = 500;
+    size_t n = 5, m = 250;
     gsl_rng *rng;
     dml_copula_type_t types[] = { DML_COPULA_NORMAL };
     size_t types_size = 1;
@@ -398,22 +398,22 @@ test_dvine_ran_fit_5d_normal_indep(dml_vine_weight_t weight,
     xj = gsl_matrix_column(fitted_data, 1);
     corr = gsl_stats_correlation(xi.vector.data, xi.vector.stride,
                                  xj.vector.data, xj.vector.stride, m);
-    g_assert(fabs(corr - 0.75) < 0.1);
+    g_assert(fabs(corr - 0.75) < 0.25);
     xi = gsl_matrix_column(fitted_data, 1);
     xj = gsl_matrix_column(fitted_data, 2);
     corr = gsl_stats_correlation(xi.vector.data, xi.vector.stride,
                                  xj.vector.data, xj.vector.stride, m);
-    g_assert(fabs(corr + 0.75) < 0.1);
+    g_assert(fabs(corr + 0.75) < 0.25);
     xi = gsl_matrix_column(fitted_data, 2);
     xj = gsl_matrix_column(fitted_data, 3);
     corr = gsl_stats_correlation(xi.vector.data, xi.vector.stride,
                                  xj.vector.data, xj.vector.stride, m);
-    g_assert(fabs(corr - 0.95) < 0.1);
+    g_assert(fabs(corr - 0.95) < 0.25);
     xi = gsl_matrix_column(fitted_data, 3);
     xj = gsl_matrix_column(fitted_data, 4);
     corr = gsl_stats_correlation(xi.vector.data, xi.vector.stride,
                                  xj.vector.data, xj.vector.stride, m);
-    g_assert(fabs(corr + 0.95) < 0.1);
+    g_assert(fabs(corr + 0.95) < 0.25);
 
     dml_vine_free(vine);
     dml_vine_free(fitted);
@@ -571,7 +571,7 @@ test_rvine_fit_2d()
 void
 test_rvine_ran_fit_3d_normal()
 {
-    size_t n = 3, m = 400;
+    size_t n = 3, m = 500;
     gsl_rng *rng;
     dml_copula_type_t types[] = { DML_COPULA_NORMAL };
     size_t types_size = 1;
@@ -624,7 +624,7 @@ test_rvine_ran_fit_3d_normal()
                                                 fitted_xi.vector.stride,
                                                 fitted_xj.vector.data,
                                                 fitted_xj.vector.stride, m);
-            g_assert(fabs(vine_corr - fitted_corr) < 0.1);
+            g_assert(fabs(vine_corr - fitted_corr) < 0.25);
         }
     }
 
@@ -638,7 +638,7 @@ test_rvine_ran_fit_3d_normal()
 static void
 test_rvine_ran_fit_7d_normal(dml_vine_weight_t weight)
 {
-    size_t n = 7, m = 2750;
+    size_t n = 7, m = 250;
     gsl_rng *rng;
     dml_copula_type_t types[] = { DML_COPULA_NORMAL };
     size_t types_size = 1;
@@ -735,7 +735,7 @@ test_rvine_ran_fit_7d_normal(dml_vine_weight_t weight)
                                                 fitted_xi.vector.stride,
                                                 fitted_xj.vector.data,
                                                 fitted_xj.vector.stride, m);
-            g_assert(fabs(vine_corr - fitted_corr) < 0.25);
+            g_assert(fabs(vine_corr - fitted_corr) < 0.5);
         }
     }
 
@@ -760,7 +760,7 @@ test_rvine_ran_fit_cvm_7d_normal()
 
 void test_rvine_ran_fit_9d_normal_trunc()
 {
-    size_t n = 7, m = 2500;
+    size_t n = 7, m = 2000;
     gsl_rng *rng;
     dml_copula_type_t types[] = { DML_COPULA_NORMAL };
     size_t types_size = 1;
@@ -857,7 +857,7 @@ void test_rvine_ran_fit_9d_normal_trunc()
                                                 fitted_xi.vector.stride,
                                                 fitted_xj.vector.data,
                                                 fitted_xj.vector.stride, m);
-            g_assert(fabs(vine_corr - fitted_corr) < 0.25);
+            g_assert(fabs(vine_corr - fitted_corr) < 0.5);
         }
     }
 
