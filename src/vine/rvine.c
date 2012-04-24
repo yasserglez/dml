@@ -233,137 +233,92 @@ fit_rvine_trees(igraph_t **trees,
                 Ceb = EAN(graph, "Ceb", e);
 
                 // Assign u and u_rank.
-                if (Cea == EAN(trees[k - 1], "Cea", a)) {
-                    if (EAN(trees[k - 1], "Cea", a)
-                            < EAN(trees[k - 1], "Ceb", a)) {
-                        u = VAP(graph, "h", a);
-                        if (u == NULL) {
-                            copula = EAP(trees[k - 1], "copula", a);
-                            measure = EAP(trees[k - 1], "measure", a);
-                            u = gsl_vector_alloc(m);
-                            dml_copula_h(copula, measure->x, measure->y, u);
-                            SETVAP(graph, "h", a, u);
-                            gsl_sort_vector_index(perm, u);
-                            rank = gsl_permutation_alloc(m);
-                            gsl_permutation_inverse(rank, perm);
-                            SETVAP(graph, "hrank", a, rank);
-                        }
-                        u_rank = VAP(graph, "hrank", a);
-                    } else {
-                        u = VAP(graph, "hrev", a);
-                        if (u == NULL) {
-                            copula = EAP(trees[k - 1], "copula", a);
-                            measure = EAP(trees[k - 1], "measure", a);
-                            u = gsl_vector_alloc(m);
-                            dml_copula_h(copula, measure->y, measure->x, u);
-                            SETVAP(graph, "hrev", a, u);
-                            gsl_sort_vector_index(perm, u);
-                            rank = gsl_permutation_alloc(m);
-                            gsl_permutation_inverse(rank, perm);
-                            SETVAP(graph, "hrevrank", a, rank);
-                        }
-                        u_rank = VAP(graph, "hrevrank", a);
+                if ((Cea == EAN(trees[k - 1], "Cea", a)
+                        && (EAN(trees[k - 1], "Cea", a)
+                                < EAN(trees[k - 1], "Ceb", a)))
+                        || (Cea != EAN(trees[k - 1], "Cea", a)
+                                && (EAN(trees[k - 1], "Cea", a)
+                                        > EAN(trees[k - 1], "Ceb", a)))) {
+                    u = VAP(graph, "h", a);
+                    if (u == NULL) {
+                        copula = EAP(trees[k - 1], "copula", a);
+                        measure = EAP(trees[k - 1], "measure", a);
+                        u = gsl_vector_alloc(m);
+                        dml_copula_h(copula, measure->x, measure->y, u);
+                        SETVAP(graph, "h", a, u);
+                        gsl_sort_vector_index(perm, u);
+                        rank = gsl_permutation_alloc(m);
+                        gsl_permutation_inverse(rank, perm);
+                        SETVAP(graph, "hrank", a, rank);
                     }
-                } else {
-                    // Cea == EAN(trees[k - 1], "Ceb", a)
-                    if (EAN(trees[k - 1], "Cea", a)
-                            < EAN(trees[k - 1], "Ceb", a)) {
-                        u = VAP(graph, "hrev", a);
-                        if (u == NULL) {
-                            copula = EAP(trees[k - 1], "copula", a);
-                            measure = EAP(trees[k - 1], "measure", a);
-                            u = gsl_vector_alloc(m);
-                            dml_copula_h(copula, measure->y, measure->x, u);
-                            SETVAP(graph, "hrev", a, u);
-                            gsl_sort_vector_index(perm, u);
-                            rank = gsl_permutation_alloc(m);
-                            gsl_permutation_inverse(rank, perm);
-                            SETVAP(graph, "hrevrank", a, rank);
-                        }
-                        u_rank = VAP(graph, "hrevrank", a);
-                    } else {
-                        u = VAP(graph, "h", a);
-                        if (u == NULL) {
-                            copula = EAP(trees[k - 1], "copula", a);
-                            measure = EAP(trees[k - 1], "measure", a);
-                            u = gsl_vector_alloc(m);
-                            dml_copula_h(copula, measure->x, measure->y, u);
-                            SETVAP(graph, "h", a, u);
-                            gsl_sort_vector_index(perm, u);
-                            rank = gsl_permutation_alloc(m);
-                            gsl_permutation_inverse(rank, perm);
-                            SETVAP(graph, "hrank", a, rank);
-                        }
-                        u_rank = VAP(graph, "hrank", a);
+                    u_rank = VAP(graph, "hrank", a);
+                }
+                if ((Cea == EAN(trees[k - 1], "Cea", a)
+                        && (EAN(trees[k - 1], "Cea", a)
+                                > EAN(trees[k - 1], "Ceb", a)))
+                        || (Cea != EAN(trees[k - 1], "Cea", a)
+                                && (EAN(trees[k - 1], "Cea", a)
+                                        < EAN(trees[k - 1], "Ceb", a)))) {
+                    u = VAP(graph, "hrev", a);
+                    if (u == NULL) {
+                        copula = EAP(trees[k - 1], "copula", a);
+                        measure = EAP(trees[k - 1], "measure", a);
+                        u = gsl_vector_alloc(m);
+                        dml_copula_h(copula, measure->y, measure->x, u);
+                        SETVAP(graph, "hrev", a, u);
+                        gsl_sort_vector_index(perm, u);
+                        rank = gsl_permutation_alloc(m);
+                        gsl_permutation_inverse(rank, perm);
+                        SETVAP(graph, "hrevrank", a, rank);
                     }
+                    u_rank = VAP(graph, "hrevrank", a);
                 }
 
                 // Assign v and v_rank.
-                if (Ceb == EAN(trees[k - 1], "Cea", b)) {
-                    if (EAN(trees[k - 1], "Cea", b)
-                            < EAN(trees[k - 1], "Ceb", b)) {
-                        v = VAP(graph, "h", b);
-                        if (v == NULL) {
-                            copula = EAP(trees[k - 1], "copula", b);
-                            measure = EAP(trees[k - 1], "measure", b);
-                            v = gsl_vector_alloc(m);
-                            dml_copula_h(copula, measure->x, measure->y, v);
-                            SETVAP(graph, "h", b, v);
-                            gsl_sort_vector_index(perm, v);
-                            rank = gsl_permutation_alloc(m);
-                            gsl_permutation_inverse(rank, perm);
-                            SETVAP(graph, "hrank", b, rank);
-                        }
-                        v_rank = VAP(graph, "hrank", b);
-                    } else {
-                        v = VAP(graph, "hrev", b);
-                        if (v == NULL) {
-                            copula = EAP(trees[k - 1], "copula", b);
-                            measure = EAP(trees[k - 1], "measure", b);
-                            v = gsl_vector_alloc(m);
-                            dml_copula_h(copula, measure->y, measure->x, v);
-                            SETVAP(graph, "hrev", b, v);
-                            gsl_sort_vector_index(perm, v);
-                            rank = gsl_permutation_alloc(m);
-                            gsl_permutation_inverse(rank, perm);
-                            SETVAP(graph, "hrevrank", b, rank);
-                        }
-                        v_rank = VAP(graph, "hrevrank", b);
+                if ((Ceb == EAN(trees[k - 1], "Cea", b)
+                        && (EAN(trees[k - 1], "Cea", b)
+                                < EAN(trees[k - 1], "Ceb", b)))
+                        || (Ceb != EAN(trees[k - 1], "Cea", b)
+                                && (EAN(trees[k - 1], "Cea", b)
+                                        > EAN(trees[k - 1], "Ceb", b)))) {
+                    v = VAP(graph, "h", b);
+                    if (v == NULL) {
+                        copula = EAP(trees[k - 1], "copula", b);
+                        measure = EAP(trees[k - 1], "measure", b);
+                        v = gsl_vector_alloc(m);
+                        dml_copula_h(copula, measure->x, measure->y, v);
+                        SETVAP(graph, "h", b, v);
+                        gsl_sort_vector_index(perm, v);
+                        rank = gsl_permutation_alloc(m);
+                        gsl_permutation_inverse(rank, perm);
+                        SETVAP(graph, "hrank", b, rank);
                     }
-                } else {
-                    // Ceb == EAN(trees[k - 1], "Ceb", b)
-                    if (EAN(trees[k - 1], "Cea", b)
-                            < EAN(trees[k - 1], "Ceb", b)) {
-                        v = VAP(graph, "hrev", b);
-                        if (v == NULL) {
-                            copula = EAP(trees[k - 1], "copula", b);
-                            measure = EAP(trees[k - 1], "measure", b);
-                            v = gsl_vector_alloc(m);
-                            dml_copula_h(copula, measure->y, measure->x, v);
-                            SETVAP(graph, "hrev", b, v);
-                            gsl_sort_vector_index(perm, v);
-                            rank = gsl_permutation_alloc(m);
-                            gsl_permutation_inverse(rank, perm);
-                            SETVAP(graph, "hrevrank", b, rank);
-                        }
-                        v_rank = VAP(graph, "hrevrank", b);
-                    } else {
-                        v = VAP(graph, "h", b);
-                        if (v == NULL) {
-                            copula = EAP(trees[k - 1], "copula", b);
-                            measure = EAP(trees[k - 1], "measure", b);
-                            v = gsl_vector_alloc(m);
-                            dml_copula_h(copula, measure->x, measure->y, v);
-                            SETVAP(graph, "h", b, v);
-                            gsl_sort_vector_index(perm, v);
-                            rank = gsl_permutation_alloc(m);
-                            gsl_permutation_inverse(rank, perm);
-                            SETVAP(graph, "hrank", b, rank);
-                        }
-                        v_rank = VAP(graph, "hrank", b);
+                    v_rank = VAP(graph, "hrank", b);
+
+                }
+                if ((Ceb == EAN(trees[k - 1], "Cea", b)
+                        && (EAN(trees[k - 1], "Cea", b)
+                                > EAN(trees[k - 1], "Ceb", b)))
+                        || (Ceb != EAN(trees[k - 1], "Cea", b)
+                                && (EAN(trees[k - 1], "Cea", b)
+                                        < EAN(trees[k - 1], "Ceb", b)))) {
+                    v = VAP(graph, "hrev", b);
+                    if (v == NULL) {
+                        copula = EAP(trees[k - 1], "copula", b);
+                        measure = EAP(trees[k - 1], "measure", b);
+                        v = gsl_vector_alloc(m);
+                        dml_copula_h(copula, measure->y, measure->x, v);
+                        SETVAP(graph, "hrev", b, v);
+                        gsl_sort_vector_index(perm, v);
+                        rank = gsl_permutation_alloc(m);
+                        gsl_permutation_inverse(rank, perm);
+                        SETVAP(graph, "hrevrank", b, rank);
                     }
+                    v_rank = VAP(graph, "hrevrank", b);
                 }
 
+                // Set the weight of the edge. The arguments are ordered here.
+                // The order determines the x and y fields of measure.
                 if (Cea < Ceb) {
                     rvine_set_weight(graph, weight, e, u, v, u_rank, v_rank);
                 } else {
