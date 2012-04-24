@@ -110,13 +110,13 @@ fit_rvine_trees(igraph_t **trees,
     gsl_vector *x;
     igraph_integer_t e; // Edge id.
     igraph_integer_t a, aa, ab, b, ba, bb; // Vertex id.
-    gsl_vector *u, *v;
+    gsl_vector *u = NULL, *v = NULL;
     igraph_integer_t Cea, Ceb;
     gsl_vector_short *Ue, *Ua, *Ub;
     size_t k;
     dml_measure_t *measure;
     double tree_aic, copula_aic;
-    gsl_permutation *perm, *rank, *u_rank, *v_rank;
+    gsl_permutation *perm, *rank, *u_rank = NULL, *v_rank = NULL;
 
     igraph_i_set_attribute_table(&igraph_cattribute_table);
 
