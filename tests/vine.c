@@ -976,7 +976,7 @@ void test_rvine_bugfix3()
     data = gsl_matrix_alloc(300, 10);
     simulated = gsl_matrix_alloc(100, 10);
 
-    for (size_t k = 0; k < 10; k++) {
+    for (size_t k = 0; k < 3; k++) {
         // Generate a 10-dimensional independent sample.
         for (size_t i = 0; i < 300; i++) {
             for (size_t j = 0; j < 10; j++) {

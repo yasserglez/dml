@@ -391,18 +391,22 @@ fit_rvine_trees(igraph_t **trees,
                 copula = dml_copula_select(measure->x, measure->y, measure,
                                            indeptest, indeptest_level, types,
                                            types_size, select, gof_level, rng);
+                // Get information for the truncation of the vine.
+                if (trunc == DML_VINE_TRUNC_AIC) {
+                    dml_copula_aic(copula, measure->x, measure->y, &copula_aic);
+                    tree_aic += copula_aic;
+                }
             } else {
                 copula = dml_copula_select(measure->y, measure->x, measure,
                                            indeptest, indeptest_level, types,
                                            types_size, select, gof_level, rng);
+                // Get information for the truncation of the vine.
+                if (trunc == DML_VINE_TRUNC_AIC) {
+                    dml_copula_aic(copula, measure->y, measure->x, &copula_aic);
+                    tree_aic += copula_aic;
+                }
             }
             SETEAP(trees[k], "copula", e, copula);
-
-            // Get information for the truncation of the vine.
-            if (trunc == DML_VINE_TRUNC_AIC) {
-                dml_copula_aic(copula, u, v, &copula_aic);
-                tree_aic += copula_aic;
-            }
         }
 
         igraph_destroy(graph);
