@@ -952,3 +952,58 @@ void test_rvine_bugfix2()
     gsl_rng_free(rng);
     gsl_matrix_free(data);
 }
+
+void test_rvine_bugfix3()
+{
+    // This code revealed a bug in the C-vine inference algorithm
+    // regarding the order of the arguments of the dml_copula_select
+    // and dml_copula_h functions (conditioning variable). This checks
+    // the same bug tested in test_rvine_bugfix2.
+
+    dml_vine_t *vine;
+    gsl_rng *rng;
+    gsl_matrix *data, *simulated;
+    gsl_vector_view u, v;
+    dml_copula_type_t types[] = { DML_COPULA_NORMAL, DML_COPULA_CLAYTON,
+            DML_COPULA_RCLAYTON90, DML_COPULA_RCLAYTON180,
+            DML_COPULA_RCLAYTON270 };
+    size_t types_size = 5;
+    dml_measure_t *measure;
+
+    vine = dml_vine_alloc(DML_VINE_RVINE, 10);
+    rng = gsl_rng_alloc(gsl_rng_taus);
+    gsl_rng_set(rng, g_test_rand_int());
+    data = gsl_matrix_alloc(300, 10);
+    simulated = gsl_matrix_alloc(100, 10);
+
+    for (size_t k = 0; k < 10; k++) {
+        // Generate a 10-dimensional independent sample.
+        for (size_t i = 0; i < 300; i++) {
+            for (size_t j = 0; j < 10; j++) {
+                gsl_matrix_set(data, i, j, gsl_rng_uniform(rng));
+            }
+        }
+
+        // Estimate a R-vine from the sample.
+        dml_vine_fit(vine, data, DML_VINE_WEIGHT_TAU, DML_VINE_TRUNC_NONE,
+                DML_COPULA_INDEPTEST_CVM, 0.01, &types[0], types_size,
+                DML_COPULA_SELECT_AIC, 0.01, rng);
+
+        // Simulate the R-vine and check for small values of Kendall's tau.
+        dml_vine_ran(vine, rng, simulated);
+        for (size_t i = 1; i < 10; i++) {
+            for (size_t j = 0; j < i; j++) {
+                u = gsl_matrix_column(simulated, i);
+                v = gsl_matrix_column(simulated, j);
+                measure = dml_measure_alloc(&u.vector, &v.vector);
+                g_assert(dml_measure_tau_coef(measure) < 0.5);
+                dml_measure_free(measure);
+            }
+        }
+    }
+
+    gsl_matrix_free(data);
+    gsl_matrix_free(simulated);
+    gsl_rng_free(rng);
+    dml_vine_free(vine);
+}

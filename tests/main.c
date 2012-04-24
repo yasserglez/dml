@@ -70,8 +70,7 @@ main(int argc, char **argv)
     g_test_add_func("/vine/dvine/ran_2d", test_dvine_ran_2d);
     g_test_add_func("/vine/dvine/fit_2d", test_dvine_fit_2d);
     g_test_add_func("/vine/dvine/ran_fit_tau_5d_normal_indep", test_dvine_ran_fit_tau_5d_normal_indep);
-    g_test_add_func("/vine/dvine/ran_fit_cvm_5d_normal_indep", test_dvine_ran_fit_cvm_5d_normal_indep);
-    g_test_add_func("/vine/dvine/ran_fit_20d_normal_trunc", test_dvine_ran_fit_20d_normal_trunc);
+    g_test_add_func("/vine/dvine/ran_fit_cvm_5d_normal_indep", test_dvine_ran_fit_cvm_5d_normal_indep);//    g_test_add_func("/vine/dvine/ran_fit_20d_normal_trunc", test_dvine_ran_fit_20d_normal_trunc);
     g_test_add_func("/vine/rvine/alloc", test_rvine_alloc);
     g_test_add_func("/vine/rvine/ran_2d", test_rvine_ran_2d);
     g_test_add_func("/vine/rvine/fit_2d", test_rvine_fit_2d);
@@ -81,6 +80,7 @@ main(int argc, char **argv)
     g_test_add_func("/vine/rvine/ran_fit_9d_normal_trunc", test_rvine_ran_fit_9d_normal_trunc);
     g_test_add_func("/vine/rvine/bugfix1", test_rvine_bugfix1);
     g_test_add_func("/vine/rvine/bugfix2", test_rvine_bugfix2);
+    g_test_add_func("/vine/rvine/bugfix3", test_rvine_bugfix3);
 
     return g_test_run();
 }
