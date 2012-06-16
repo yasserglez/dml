@@ -1,5 +1,5 @@
 // DML - Dependence Modeling Library
-// Copyright (C) 2011-2012 Yasser González-Fernández <ygonzalezfernandez@gmail.com>
+// Copyright (C) 2011-2012 Yasser González Fernández <ygonzalezfernandez@gmail.com>
 
 #ifndef TEST_H_
 #define TEST_H_

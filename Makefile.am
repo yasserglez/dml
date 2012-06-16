@@ -1,5 +1,5 @@
 # DML - Dependence Modeling Library
-# Copyright (C) 2011-2012 Yasser González-Fernández <ygonzalezfernandez@gmail.com>
+# Copyright (C) 2011-2012 Yasser González Fernández <ygonzalezfernandez@gmail.com>
 
 AM_CPPFLAGS = @GLIB_CFLAGS@ @GSL_CFLAGS@ @IGRAPH_CFLAGS@
 AM_CFLAGS = -Wall -Werror -pedantic
