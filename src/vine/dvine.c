@@ -7,9 +7,10 @@
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_rng.h>
+#include <gsl/gsl_vector_ulong.h>
+#include <gsl/gsl_vector_short.h>
 
 #include "src/dml.h"
-#include "src/vine/linkern.h"
 
 static void
 dvine_select_order(dml_vine_t *vine,
@@ -18,23 +19,18 @@ dvine_select_order(dml_vine_t *vine,
                    dml_measure_t ***measure_matrix,
                    const gsl_rng *rng)
 {
-    int n;
+    int n = (int) vine->dim;
     double **weight_matrix;
-    int ncount, ecount;
-    double max_weight;
-    int precision;
-    int k;
-    int *elist, *elen;
-    CCrandstate rstate;
-    CCdatagroup dat;
-    int *cycle;
-    double val;
+    size_t selected_node;
+    gsl_vector_ulong *tour;
+    gsl_vector_short *in_tour;
+    double selected_cost, current_cost;
+    size_t current_pos, selected_pos;
+    double dik, dkj, dij;
+    size_t i, j;
     int cut_index;
 
-    n = (int) vine->dim;
-
-    // The weight is minimized.
-
+    // Compute the weights. The weights are minimized.
     weight_matrix = g_malloc_n(n, sizeof(double *));
     for (size_t i = 0; i < n; i++) {
         weight_matrix[i] = g_malloc_n(n, sizeof(double));
@@ -56,66 +52,95 @@ dvine_select_order(dml_vine_t *vine,
         }
     }
 
-    ncount = n + 1; // Original variables plus the dummy node.
-    ecount = ncount * (ncount - 1) / 2;
+    // Compute an approximate solution for the TSP instance using the
+    // Cheapest insertion heuristic. The dummy node has index n.
+    tour = gsl_vector_ulong_alloc(n + 1);
+    in_tour = gsl_vector_short_alloc(n + 1);
+    gsl_vector_short_set_all(in_tour, FALSE);
 
-    // Information to round the weights to integers.
-    max_weight = fabs(weight_matrix[1][0]);
-    for (int i = 1; i < n; i++) {
-        for (int j = 0; j < i; j++) {
-            if (fabs(weight_matrix[i][j]) > max_weight) {
-                max_weight = fabs(weight_matrix[i][j]);
+    for (size_t node_count = 0; node_count < n + 1; node_count++) {
+        // Select the node to be inserted.
+        if (node_count == 0) {
+            // Initial node (randomly selected).
+            selected_node = floor((n + 1) * gsl_rng_uniform(rng));
+            gsl_vector_ulong_set(tour, node_count, selected_node);
+            gsl_vector_short_set(in_tour, selected_node, TRUE);
+        } else {
+            selected_cost = GSL_DBL_MAX;
+
+            // Rest of the nodes. Choose the nodes with the minimal insertion cost.
+            for (size_t k = 0; k < n + 1; k++) {
+                if (!gsl_vector_short_get(in_tour, k)) {
+                    if (node_count == 1) {
+                        i = gsl_vector_ulong_get(tour, 0);
+                        current_cost = (i == n || k == n) ? 0: weight_matrix[i][k];
+                        current_pos = 0;
+                    } else {
+                        current_cost = GSL_DBL_MAX;
+                        for (size_t pos = 0; pos < node_count - 1; pos++) {
+                            i = gsl_vector_ulong_get(tour, pos);
+                            j = gsl_vector_ulong_get(tour, pos + 1);
+                            dik = (i == n || k == n) ? 0: weight_matrix[i][k];
+                            dkj = (k == n || j == n) ? 0: weight_matrix[k][j];
+                            dij = (i == n || j == n) ? 0: weight_matrix[i][j];
+
+                            if (dik + dkj + dij < current_cost) {
+                                current_cost = dik + dkj + dij;
+                                current_pos = pos;
+                            }
+                        }
+                    }
+
+                    // Check the last position.
+                    i = gsl_vector_ulong_get(tour, node_count - 1);
+                    j = gsl_vector_ulong_get(tour, 0);
+                    dik = (i == n || k == n) ? 0: weight_matrix[i][k];
+                    dkj = (k == n || j == n) ? 0: weight_matrix[k][j];
+                    dij = (i == n || j == n) ? 0: weight_matrix[i][j];
+
+                    if (dik + dkj + dij < current_cost) {
+                        current_cost = dik + dkj + dij;
+                        current_pos = node_count - 1;
+                    }
+
+                    if (current_cost < selected_cost) {
+                        selected_node = k;
+                        selected_cost = current_cost;
+                        selected_pos = current_pos;
+                    }
+
+                }
             }
+
+            // Add the selected node to the tour.
+            for (size_t pos = selected_pos; pos < node_count; pos++) {
+                i = gsl_vector_ulong_get(tour, pos + 1);
+                if (pos == selected_pos) {
+                    gsl_vector_ulong_set(tour, pos + 1, selected_node);
+                } else {
+                    gsl_vector_ulong_set(tour, pos + 1, j);
+                }
+                j = i;
+            }
+            gsl_vector_short_set(in_tour, selected_node, TRUE);
         }
     }
-    precision = floor(log10((pow(2, 31) - 1) / max_weight / ncount));
 
-    // Initialization of the list and edge lengths.
-    k = 0;
-    elist = g_malloc_n(2 * ecount, sizeof(int));
-    elen = g_malloc_n(ecount, sizeof(int));
-    for (int i = 1; i < ncount; i++) {
-        for (int j = 0; j < i; j++) {
-            elist[2*k] = i;
-            elist[2*k+1] = j;
-            if (i == ncount - 1) {
-                elen[k] = 0;
-            } else {
-                elen[k] = weight_matrix[i][j] * pow(10, precision);
-            }
-            k++;
-        }
-    }
-
-    // Compute an approximate solution for the TSP instance using the Chained
-    // Lin-Kernighan heuristic as implemented in Concorde. The initial tour is
-    // generated randomly and random walk kicks are used. The linkern.h and
-    // linkern.c files contain selected functions from Concorde with minor
-    // modifications to avoid unneeed dependences. Refer to the original
-    // source code of Concorde and its documentation for more information.
-    CCutil_sprand(INT_MAX * gsl_rng_uniform(rng), &rstate);
-    CCutil_graph2dat_matrix(ncount, ecount, elist, elen, 0, &dat);
-    cycle = g_malloc_n(ncount, sizeof(int));
-    CClinkern_tour(ncount, &dat, ecount, elist, 100000000, ncount,
-                   NULL, cycle, &val, &rstate);
-    CCutil_freedatagroup(&dat);
-    free(elist);
-    free(elen);
-
-    // Cut the cycle at the dummy node.
+    // Cut the tour at the dummy node.
     cut_index = -1;
-    for (int i = 0; i < ncount; i++) {
-        if (cut_index > 0) {
-            vine->order[i - cut_index - 1] = cycle[i];
-        } else if (cycle[i] == ncount - 1) {
+    for (int i = 0; i < n + 1; i++) {
+        if (cut_index >= 0) {
+            vine->order[i - cut_index - 1] = gsl_vector_ulong_get(tour, i);
+        } else if (gsl_vector_ulong_get(tour, i) == n) {
             cut_index = i;
         }
     }
     for (int i = 0; i < cut_index; i++) {
-        vine->order[ncount - cut_index + i - 1] = cycle[i];
+        vine->order[n - cut_index + i] = gsl_vector_ulong_get(tour, i);
     }
 
-    g_free(cycle);
+    gsl_vector_ulong_free(tour);
+    gsl_vector_short_free(in_tour);
     for (size_t i = 0; i < n; i++) {
         g_free(weight_matrix[i]);
     }

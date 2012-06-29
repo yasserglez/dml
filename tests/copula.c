@@ -326,7 +326,7 @@ test_copula_select_indeptest_none()
 static void
 test_copula_select_indeptest(dml_copula_indeptest_t indeptest)
 {
-    size_t m = 750;
+    size_t m = 1000;
     gsl_rng *rng;
     gsl_vector *u, *v;
     dml_copula_t *copula, *selected;
