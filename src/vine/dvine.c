@@ -40,7 +40,7 @@ dvine_select_order(dml_vine_t *vine,
     gsl_vector_ulong *tour;
     gsl_vector_short *in_tour;
     double selected_cost, current_cost;
-    size_t current_pos, selected_pos;
+    size_t current_pos = 0, selected_pos = 0; // Initialized to avoid GCC warnings.
     double dik, dkj, dij;
     size_t i, j;
     int cut_index;
