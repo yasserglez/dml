@@ -1,4 +1,2 @@
 DML - Dependence Modeling Library
-Copyright (C) 2011-2012 Yasser González Fernández <ygonzalezfernandez@gmail.com>
-
-This program is still under development.
+Copyright (C) 2011-2013 Yasser Gonzalez-Fernandez <ygonzalezfernandez@gmail.com>
