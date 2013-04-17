@@ -419,7 +419,6 @@ copula_alloc_rclayton(int degrees, double theta)
     copula->h = copula_h_rclayton;
     copula->hinv = copula_hinv_rclayton;
     copula->aic = copula_aic_rclayton;
-    copula->gof = NULL;
     copula->free = copula_free_rclayton;
     copula->data = g_malloc(sizeof(double));
     params = copula->data;
