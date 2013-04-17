@@ -244,6 +244,14 @@ dml_copula_aic(const dml_copula_t *copula,
                double *aic);
 
 void
+dml_copula_cvm_stat(const dml_copula_t *copula,
+                    const gsl_vector *u,
+                    const gsl_vector *v,
+                    dml_measure_t *measure,
+                    const gsl_rng *rng,
+                    double *cvm_stat);
+
+void
 dml_copula_free(dml_copula_t *copula);
 
 

@@ -67,14 +67,6 @@ dml_copula_select(const gsl_vector *u,
         if (types_size == 1) {
             selected = dml_copula_alloc(types[0]);
             dml_copula_fit(selected, u, v, measure);
-
-            if (select == DML_COPULA_SELECT_CVM) {
-                dml_copula_gof(selected, u, v, measure, rng, &selected_fit);
-                if (selected_fit < gof_level) {
-                    dml_copula_free(selected);
-                    selected = NULL;
-                }
-            }
         } else {
             for (size_t t = 0; t < types_size; t++) {
                 if (dml_measure_tau_coef(measure) > 0
@@ -96,45 +88,25 @@ dml_copula_select(const gsl_vector *u,
                 switch (select) {
                 case DML_COPULA_SELECT_AIC:
                     dml_copula_aic(candidate, u, v, &candidate_fit);
-                    if (selected == NULL) {
-                        selected = candidate;
-                        selected_fit = candidate_fit;
-                    } else if (candidate_fit < selected_fit) {
-                        dml_copula_free(selected);
-                        selected = candidate;
-                        selected_fit = candidate_fit;
-                    } else {
-                        dml_copula_free(candidate);
-                    }
                     break;
                 case DML_COPULA_SELECT_CVM:
-                    dml_copula_gof(candidate, u, v, measure, rng, &candidate_fit);
-                    if (candidate_fit >= gof_level) {
-                        // The candidate copula was not rejected.
-                        if (selected == NULL) {
-                            selected = candidate;
-                            selected_fit = candidate_fit;
-                        } else if (candidate_fit > selected_fit) {
-                            dml_copula_free(selected);
-                            selected = candidate;
-                            selected_fit = candidate_fit;
-                        } else {
-                            dml_copula_free(candidate);
-                        }
-                    } else {
-                        // The candidate copula was rejected.
-                        dml_copula_free(candidate);
-                    }
+                    dml_copula_cvm_stat(candidate, u, v, measure, rng, &candidate_fit);
                     break;
                 default:
                     break;
                 }
+                if (selected == NULL) {
+                    selected = candidate;
+                    selected_fit = candidate_fit;
+                } else if (candidate_fit < selected_fit) {
+                    dml_copula_free(selected);
+                    selected = candidate;
+                    selected_fit = candidate_fit;
+                } else {
+                    dml_copula_free(candidate);
+                }
             }
         }
-    }
-
-    if (selected == NULL) {
-        // TODO: Non-parametric estimation.
     }
 
     if (measure_dealloc) dml_measure_free(measure);

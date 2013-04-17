@@ -394,11 +394,10 @@ copula_aic_rclayton(const dml_copula_t *copula,
     for (size_t i = 0; i < pdf->size; i++) {
         loglik += log(gsl_vector_get(pdf, i));
     }
-    *aic = -2*loglik + 2;
+    *aic = -2 * loglik + 2;
 
     gsl_vector_free(pdf);
 }
-
 
 static void
 copula_free_rclayton(dml_copula_t *copula)
