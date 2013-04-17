@@ -87,7 +87,7 @@ test_cvine_fit_2d()
     vine = dml_vine_alloc(DML_VINE_CVINE, 2);
     dml_vine_fit(vine, data, DML_VINE_WEIGHT_TAU, DML_VINE_TRUNC_NONE,
                  DML_COPULA_INDEPTEST_NONE, 1.0, &types[0], types_size,
-                 DML_COPULA_SELECT_AIC, 0, rng);
+                 DML_COPULA_SELECT_AIC, rng);
     vine_corr = ((double *) vine->copulas[0][0]->data)[0];
     g_assert(fabs(corr - vine_corr) < 0.1);
 
@@ -129,7 +129,7 @@ test_cvine_ran_fit_20d_normal_trunc()
     fitted = dml_vine_alloc(DML_VINE_CVINE, n);
     dml_vine_fit(fitted, vine_data, DML_VINE_WEIGHT_TAU,
                  DML_VINE_TRUNC_AIC, DML_COPULA_INDEPTEST_NONE, 1.0,
-                 &types[0], types_size, DML_COPULA_SELECT_AIC, 0, rng);
+                 &types[0], types_size, DML_COPULA_SELECT_AIC, rng);
     fitted_data = gsl_matrix_alloc(m, n);
     dml_vine_ran(fitted, rng, fitted_data);
 
@@ -191,7 +191,7 @@ test_cvine_ran_fit_5d_normal_indep(dml_vine_weight_t weight,
     dml_vine_ran(vine, rng, vine_data);
     fitted = dml_vine_alloc(DML_VINE_CVINE, n);
     dml_vine_fit(fitted, vine_data, weight, DML_VINE_TRUNC_NONE, indeptest,
-                 0.05, &types[0], types_size, DML_COPULA_SELECT_AIC, 0, rng);
+                 0.05, &types[0], types_size, DML_COPULA_SELECT_AIC, rng);
     fitted_data = gsl_matrix_alloc(m, n);
     dml_vine_ran(fitted, rng, fitted_data);
 
@@ -267,7 +267,7 @@ void test_cvine_bugfix1()
     vine = dml_vine_alloc(DML_VINE_CVINE, 5);
     dml_vine_fit(vine, data, DML_VINE_WEIGHT_TAU, DML_VINE_TRUNC_NONE,
             DML_COPULA_INDEPTEST_CVM, 0.01, &types[0], types_size,
-            DML_COPULA_SELECT_AIC, 0.01, rng);
+            DML_COPULA_SELECT_AIC, rng);
     dml_vine_ran(vine, rng, data);
     dml_vine_free(vine);
 
@@ -355,7 +355,7 @@ test_dvine_fit_2d()
     vine = dml_vine_alloc(DML_VINE_DVINE, 2);
     dml_vine_fit(vine, data, DML_VINE_WEIGHT_TAU, DML_VINE_TRUNC_NONE,
                  DML_COPULA_INDEPTEST_NONE, 1.0, &types[0], types_size,
-                 DML_COPULA_SELECT_AIC, 0, rng);
+                 DML_COPULA_SELECT_AIC, rng);
     vine_corr = ((double *) vine->copulas[0][0]->data)[0];
     g_assert(fabs(corr - vine_corr) < 0.1);
 
@@ -404,7 +404,7 @@ test_dvine_ran_fit_5d_normal_indep(dml_vine_weight_t weight,
     dml_vine_ran(vine, rng, vine_data);
     fitted = dml_vine_alloc(DML_VINE_DVINE, n);
     dml_vine_fit(fitted, vine_data, weight, DML_VINE_TRUNC_NONE, indeptest,
-                 0.05, &types[0], types_size, DML_COPULA_SELECT_AIC, 0, rng);
+                 0.05, &types[0], types_size, DML_COPULA_SELECT_AIC, rng);
     fitted_data = gsl_matrix_alloc(m, n);
     dml_vine_ran(fitted, rng, fitted_data);
 
@@ -481,7 +481,7 @@ test_dvine_ran_fit_20d_normal_trunc()
     fitted = dml_vine_alloc(DML_VINE_DVINE, n);
     dml_vine_fit(fitted, vine_data, DML_VINE_WEIGHT_TAU,
                  DML_VINE_TRUNC_AIC, DML_COPULA_INDEPTEST_NONE, 1.0,
-                 &types[0], types_size, DML_COPULA_SELECT_AIC, 0, rng);
+                 &types[0], types_size, DML_COPULA_SELECT_AIC, rng);
     fitted_data = gsl_matrix_alloc(m, n);
     dml_vine_ran(fitted, rng, fitted_data);
 
@@ -573,7 +573,7 @@ test_rvine_fit_2d()
     vine = dml_vine_alloc(DML_VINE_RVINE, 2);
     dml_vine_fit(vine, data, DML_VINE_WEIGHT_TAU, DML_VINE_TRUNC_NONE,
                  DML_COPULA_INDEPTEST_NONE, 1.0, &types[0], types_size,
-                 DML_COPULA_SELECT_AIC, 0, rng);
+                 DML_COPULA_SELECT_AIC, rng);
     vine_corr = ((double *) vine->copulas[1][0]->data)[0];
     g_assert(fabs(corr - vine_corr) < 0.1);
 
@@ -620,7 +620,7 @@ test_rvine_ran_fit_3d_normal()
     fitted = dml_vine_alloc(DML_VINE_RVINE, n);
     dml_vine_fit(fitted, vine_data, DML_VINE_WEIGHT_TAU,
                  DML_VINE_TRUNC_NONE, DML_COPULA_INDEPTEST_NONE, 0,
-                 &types[0], types_size, DML_COPULA_SELECT_AIC, 0, rng);
+                 &types[0], types_size, DML_COPULA_SELECT_AIC, rng);
 
     // Sample the fitted vine and check correlations.
     fitted_data = gsl_matrix_alloc(m, n);
@@ -731,7 +731,7 @@ test_rvine_ran_fit_7d_normal(dml_vine_weight_t weight)
     fitted = dml_vine_alloc(DML_VINE_RVINE, n);
     dml_vine_fit(fitted, vine_data, weight, DML_VINE_TRUNC_NONE,
                  DML_COPULA_INDEPTEST_NONE, 0, &types[0], types_size,
-                 DML_COPULA_SELECT_AIC, 0, rng);
+                 DML_COPULA_SELECT_AIC, rng);
 
     // Sample the fitted vine and check correlations.
     fitted_data = gsl_matrix_alloc(m, n);
@@ -853,7 +853,7 @@ void test_rvine_ran_fit_9d_normal_trunc()
     fitted = dml_vine_alloc(DML_VINE_RVINE, n);
     dml_vine_fit(fitted, vine_data, DML_VINE_WEIGHT_TAU,
                  DML_VINE_TRUNC_AIC, DML_COPULA_INDEPTEST_NONE, 0,
-                 &types[0], types_size, DML_COPULA_SELECT_AIC, 0, rng);
+                 &types[0], types_size, DML_COPULA_SELECT_AIC, rng);
 
     // Sample the fitted vine and check correlations.
     fitted_data = gsl_matrix_alloc(m, n);
@@ -905,7 +905,7 @@ void test_rvine_bugfix1()
     vine = dml_vine_alloc(DML_VINE_RVINE, 5);
     dml_vine_fit(vine, data, DML_VINE_WEIGHT_TAU, DML_VINE_TRUNC_AIC,
                  DML_COPULA_INDEPTEST_NONE, 0.01, &types[0], types_size,
-                 DML_COPULA_SELECT_AIC, 0.01, rng);
+                 DML_COPULA_SELECT_AIC, rng);
     dml_vine_free(vine);
 
     gsl_rng_free(rng);
@@ -946,7 +946,7 @@ void test_rvine_bugfix2()
     vine = dml_vine_alloc(DML_VINE_RVINE, 5);
     dml_vine_fit(vine, data, DML_VINE_WEIGHT_TAU, DML_VINE_TRUNC_NONE,
             DML_COPULA_INDEPTEST_CVM, 0.01, &types[0], types_size,
-            DML_COPULA_SELECT_AIC, 0.01, rng);
+            DML_COPULA_SELECT_AIC, rng);
     dml_vine_ran(vine, rng, data);
     dml_vine_free(vine);
 
@@ -1002,7 +1002,7 @@ void test_rvine_bugfix3()
         // Estimate a R-vine from the sample.
         dml_vine_fit(vine, data, DML_VINE_WEIGHT_TAU, DML_VINE_TRUNC_NONE,
                 DML_COPULA_INDEPTEST_CVM, 0.01, &types[0], types_size,
-                DML_COPULA_SELECT_AIC, 0.01, rng);
+                DML_COPULA_SELECT_AIC, rng);
 
         // Simulate the R-vine and check for small values of Kendall's tau.
         dml_vine_ran(vine, rng, simulated);

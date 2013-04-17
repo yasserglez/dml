@@ -34,7 +34,6 @@ dml_copula_select(const gsl_vector *u,
                   const dml_copula_type_t *types,
                   const size_t types_size,
                   const dml_copula_select_t select,
-                  const double gof_level,
                   const gsl_rng *rng)
 {
     dml_copula_t *selected, *candidate;

@@ -115,7 +115,6 @@ fit_rvine_trees(igraph_t **trees,
                 const dml_copula_type_t *types,
                 const size_t types_size,
                 const dml_copula_select_t select,
-                const double gof_level,
                 const gsl_rng *rng)
 {
     size_t m, n;
@@ -360,7 +359,7 @@ fit_rvine_trees(igraph_t **trees,
             if (Cea < Ceb) {
                 copula = dml_copula_select(measure->x, measure->y, measure,
                                            indeptest, indeptest_level, types,
-                                           types_size, select, gof_level, rng);
+                                           types_size, select, rng);
                 // Get information for the truncation of the vine.
                 if (trunc == DML_VINE_TRUNC_AIC) {
                     dml_copula_aic(copula, measure->x, measure->y, &copula_aic);
@@ -369,7 +368,7 @@ fit_rvine_trees(igraph_t **trees,
             } else {
                 copula = dml_copula_select(measure->y, measure->x, measure,
                                            indeptest, indeptest_level, types,
-                                           types_size, select, gof_level, rng);
+                                           types_size, select, rng);
                 // Get information for the truncation of the vine.
                 if (trunc == DML_VINE_TRUNC_AIC) {
                     dml_copula_aic(copula, measure->y, measure->x, &copula_aic);
@@ -603,14 +602,13 @@ vine_fit_rvine(dml_vine_t *vine,
                const dml_copula_type_t *types,
                const size_t types_size,
                const dml_copula_select_t select,
-               const double gof_level,
                const gsl_rng *rng)
 {
     igraph_t **trees;
 
     trees = g_malloc0_n(data->size2 - 1, sizeof(igraph_t *));
     fit_rvine_trees(trees, data, weight, trunc, indeptest, indeptest_level,
-                    types, types_size, select, gof_level, rng);
+                    types, types_size, select, rng);
     rvine_trees_to_vine(vine, trees);
 
     // If the vine was truncated, free the memory of the last tree.

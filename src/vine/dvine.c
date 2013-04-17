@@ -176,7 +176,6 @@ vine_fit_dvine(dml_vine_t *vine,
                const dml_copula_type_t *types,
                const size_t types_size,
                const dml_copula_select_t select,
-               const double gof_level,
                const gsl_rng *rng)
 {
     size_t m, n;
@@ -256,7 +255,7 @@ vine_fit_dvine(dml_vine_t *vine,
         measure = measure_matrix[vine->order[i-1]][vine->order[i+1-1]];
         copula = dml_copula_select(v[0][i], v[0][i+1], measure, indeptest,
                                    indeptest_level, types, types_size,
-                                   select, gof_level, rng);
+                                   select, rng);
         vine->copulas[0][i-1] = copula;
         // Get information for the truncation of the vine.
         if (trunc == DML_VINE_TRUNC_AIC) {
@@ -326,7 +325,7 @@ vine_fit_dvine(dml_vine_t *vine,
         for (size_t i = 1; i <= n - j; i++) { // Edges of the tree.
             copula = dml_copula_select(v[j-1][2*i-1], v[j-1][2*i], NULL,
                                        indeptest, indeptest_level, types,
-                                       types_size, select, gof_level, rng);
+                                       types_size, select, rng);
             vine->copulas[j-1][i-1] = copula;
             // Get information for the truncation of the vine.
             if (trunc == DML_VINE_TRUNC_AIC) {

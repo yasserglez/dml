@@ -79,7 +79,6 @@ vine_fit_cvine(dml_vine_t *vine,
                const dml_copula_type_t *types,
                const size_t types_size,
                const dml_copula_select_t select,
-               const double gof_level,
                const gsl_rng *rng)
 {
     size_t m, n;
@@ -203,13 +202,11 @@ vine_fit_cvine(dml_vine_t *vine,
             if (a == root_vertex) {
                 copula = dml_copula_select(
                         xb, xa, measure_matrix[(size_t) b][(size_t) a],
-                        indeptest, indeptest_level, types, types_size, select,
-                        gof_level, rng);
+                        indeptest, indeptest_level, types, types_size, select, rng);
             } else {
                 copula = dml_copula_select(
                         xa, xb, measure_matrix[(size_t) a][(size_t) b],
-                        indeptest, indeptest_level, types, types_size, select,
-                        gof_level, rng);
+                        indeptest, indeptest_level, types, types_size, select, rng);
             }
             SETEAP(trees[k], "copula", e, copula);
 

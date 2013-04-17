@@ -130,7 +130,6 @@ typedef struct dml_vine_s {
                 const dml_copula_type_t *types,
                 const size_t types_size,
                 const dml_copula_select_t select,
-                const double gof_level,
                 const gsl_rng *rng);
     void (*ran)(const struct dml_vine_s *vine,
                 const gsl_rng *rng,
@@ -198,7 +197,6 @@ dml_copula_select(const gsl_vector *u,
                   const dml_copula_type_t *types,
                   const size_t types_size,
                   const dml_copula_select_t select,
-                  const double gof_level,
                   const gsl_rng *rng);
 
 void
@@ -280,7 +278,6 @@ dml_vine_fit(dml_vine_t *vine,
              const dml_copula_type_t *types,
              const size_t types_size,
              const dml_copula_select_t select,
-             const double gof_level,
              const gsl_rng *rng);
 
 void
