@@ -2,6 +2,7 @@ AC_PREREQ([2.67])
 LT_PREREQ([2.2.6b])
 
 AC_INIT([dml], [0.1.0])
+AM_PROG_AR
 AM_INIT_AUTOMAKE([-Wall foreign subdir-objects])
 LT_INIT
 
