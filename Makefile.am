@@ -40,7 +40,7 @@ test_SOURCES = \
 test_LDADD = libdml.la
 
 EXTRA_DIST = \
-    README.txt \
+    README.md \
     LICENSE.txt \
     src/measure/cvm.R \
     tests/data/copula.R \
