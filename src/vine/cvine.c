@@ -188,7 +188,7 @@ vine_fit_cvine(dml_vine_t *vine,
         for (b = 0; b < igraph_vcount(trees[k]); b++) {
             if (root_vertex != b) {
                 igraph_add_edge(trees[k], root_vertex, b);
-                igraph_get_eid(trees[k], &e, root_vertex, b, 0);
+                igraph_get_eid(trees[k], &e, root_vertex, b, IGRAPH_UNDIRECTED, 1);
                 SETEAN(trees[k], "index", e, VAN(trees[k], "index", b));
             }
         }

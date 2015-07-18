@@ -209,7 +209,7 @@ fit_rvine_trees(igraph_t **trees,
                     // Checking the proximity condition.
                     if (aa == ba || aa == bb || ab == ba || ab == bb) {
                         igraph_add_edge(graph, a, b);
-                        igraph_get_eid(graph, &e, a, b, IGRAPH_UNDIRECTED);
+                        igraph_get_eid(graph, &e, a, b, IGRAPH_UNDIRECTED, 1);
 
                         // Variables "connected" by this edge and conditioned set.
                         Ua = EAP(trees[k - 1], "Ue", a);
@@ -454,7 +454,7 @@ rvine_trees_to_vine(dml_vine_t *vine, igraph_t **trees)
                     igraph_edge(k <= vine->trees ? trees[k - 1] : last_trees[k - 1 - vine->trees], b, &ba, &bb);
                     if (aa == ba || aa == bb || ab == ba || ab == bb) {
                         igraph_add_edge(graph, a, b);
-                        igraph_get_eid(graph, &e, a, b, IGRAPH_UNDIRECTED);
+                        igraph_get_eid(graph, &e, a, b, IGRAPH_UNDIRECTED, 1);
 
                         // Variables "connected" by this edge and conditioned set.
                         Ua = EAP(k <= vine->trees ? trees[k - 1] : last_trees[k - 1 - vine->trees], "Ue", a);
