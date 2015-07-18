@@ -1,0 +1,7 @@
+language: c
+script:
+  - mkdir m4
+  - autoreconf --install
+  - make
+  - make test
+  - ./test
