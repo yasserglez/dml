@@ -15,7 +15,7 @@ PKG_PROG_PKG_CONFIG([0.25])
 # Checks for libraries.
 PKG_CHECK_MODULES([GLIB], [glib-2.0 >= 2.28.6])
 PKG_CHECK_MODULES([GSL], [gsl >= 1.14])
-PKG_CHECK_MODULES([IGRAPH], [igraph >= 0.5.3])
+PKG_CHECK_MODULES([IGRAPH], [igraph >= 0.6.5])
 
 # Checks for header files.
 AC_HEADER_STDC
