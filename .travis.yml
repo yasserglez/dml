@@ -1,4 +1,5 @@
 language: c
+dist: trusty
 sudo: required
 before_install:
   - sudo add-apt-repository ppa:igraph/ppa -y
